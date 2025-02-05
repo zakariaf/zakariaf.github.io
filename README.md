@@ -1,84 +1,87 @@
 <!-- markdownlint-disable-next-line -->
 <div align="center">
 
-  <!-- markdownlint-disable-next-line -->
-  # Chirpy Jekyll Theme
-
-  A minimal, responsive, and feature-rich Jekyll theme for technical writing.
-
   [![CI](https://img.shields.io/github/actions/workflow/status/cotes2020/jekyll-theme-chirpy/ci.yml?logo=github)][ci]&nbsp;
   [![Codacy Badge](https://img.shields.io/codacy/grade/4e556876a3c54d5e8f2d2857c4f43894?logo=codacy)][codacy]&nbsp;
   [![GitHub license](https://img.shields.io/github/license/cotes2020/jekyll-theme-chirpy?color=goldenrod)][license]&nbsp;
   [![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy?&logo=RubyGems&logoColor=ghostwhite&label=gem&color=orange)][gem]&nbsp;
   [![Open in Dev Containers](https://img.shields.io/badge/Dev_Containers-Open-deepskyblue?logo=linuxcontainers)][open-container]
 
-  [**Live Demo** →][demo]
-
-  [![Devices Mockup](https://chirpy-img.netlify.app/commons/devices-mockup.png)][demo]
-
 </div>
+
+
+# Zakaria Fatahi — Personal Website & Blog
+
+Welcome to my personal website repository! This site is built with [Jekyll](https://jekyllrb.com/) and uses the [Chirpy theme](https://github.com/cotes2020/jekyll-theme-chirpy) as its foundation. I forked this theme to create a custom platform where I share articles, insights, and useful resources for software engineers.
+
+## About This Site
+
+I created this site to:
+- **Share Knowledge:** Publish articles and tutorials covering various topics useful for software engineers—from coding best practices to project management and leadership.
+- **Encourage Collaboration:** Since the site is hosted on GitHub and powered by GitHub Pages, anyone can easily access, edit, or even contribute new content via pull requests.
+- **Be Open & Accessible:** All posts are publicly available so that every engineer can benefit from shared knowledge.
+- **Future Expansion:** I plan to use this theme to build a Persian version of the site in the future, making the content accessible to a wider audience.
 
 ## Features
 
-- Dark Theme
-- Localized UI language
-- Pinned Posts on Home Page
-- Hierarchical Categories
-- Trending Tags
-- Table of Contents
-- Last Modified Date
-- Syntax Highlighting
-- Mathematical Expressions
-- Mermaid Diagrams & Flowcharts
-- Dark Mode Images
-- Embed Media
-- Comment Systems
-- Built-in Search
-- Atom Feeds
-- PWA
-- Web Analytics
-- SEO & Performance Optimization
+- **Blog:** Regular posts on topics ranging from technical deep-dives to practical engineering tips.
+- **Open Contributions:** If you have something useful to share, feel free to fork the repository and create a pull request with your article.
+- **Customizable:** Built on the flexible Chirpy theme, you can easily tweak the design and settings to suit your preferences.
+- **GitHub & GitHub Pages:** Leveraging GitHub Pages ensures that the content is always available and easy to maintain, with version control at its core.
 
-## Documentation
+## Getting Started
 
-To learn how to use, develop, and upgrade the project, please refer to the [Wiki][wiki].
+To run a local copy of the site for development:
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/zakariaf/zakariaf.github.io.git
+   cd zakariaf.github.io
+   ```
+
+2. **Install dependencies:**
+
+   Ensure you have [Ruby](https://www.ruby-lang.org/) installed, then run:
+
+   ```bash
+   bundle install
+   ```
+
+3. **Serve the site locally:**
+
+   ```bash
+   bundle exec jekyll serve
+   ```
+
+   Open your browser at [http://localhost:4000](http://localhost:4000) to view the site.
+
+## Customization
+
+Since this repository is a fork of the Chirpy theme, I've customized it to match my personal branding and needs. You can modify:
+
+- **_config.yml:** Change site settings, metadata, and plugins.
+- **Assets and Styles:** Update CSS and JavaScript for visual tweaks.
+- **Content:** Edit posts in the `_posts` directory, update the About page, and add new articles.
 
 ## Contributing
 
-Contributions (_pull requests_, _issues_, and _discussions_) are what make the open-source community such an amazing place
-to learn, inspire, and create. Any contributions you make are greatly appreciated.
-For details, see the "[Contributing Guidelines][contribute-guide]".
+I welcome contributions to help make this blog a rich resource for the software engineering community. If you have an idea for an article or want to add useful content, simply fork the repository and submit a pull request. All contributions, from small tweaks to full articles, are appreciated!
 
-## Credits
+## Future Plans
 
-### Contributors
-
-Thanks to [all the contributors][contributors] involved in the development of the project!
-
-[![all-contributors](https://contrib.rocks/image?repo=cotes2020/jekyll-theme-chirpy&columns=16)][contributors]
-<sub> — Made with [contrib.rocks](https://contrib.rocks)</sub>
-
-### Third-Party Assets
-
-This project is built on the [Jekyll][jekyllrb] ecosystem and some [great libraries][lib], and is developed using [VS Code][vscode] as well as tools provided by [JetBrains][jetbrains] under a non-commercial open-source software license.
-
-The avatar and favicon for the project's website are from [ClipartMAX][clipartmax].
+- **Persian Version:** I plan to create a Persian version of this website using the same theme, making the content accessible to Persian-speaking developers.
+- **Expanded Topics:** Continue to explore new topics, tools, and best practices in software development and leadership.
 
 ## License
 
-This project is published under [MIT License][license].
+This project is licensed under the [MIT License](LICENSE).
 
-[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
-[ci]: https://github.com/cotes2020/jekyll-theme-chirpy/actions/workflows/ci.yml?query=event%3Apush+branch%3Amaster
-[codacy]: https://app.codacy.com/gh/cotes2020/jekyll-theme-chirpy/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
-[license]: https://github.com/cotes2020/jekyll-theme-chirpy/blob/master/LICENSE
-[open-container]: https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/cotes2020/jekyll-theme-chirpy
-[jekyllrb]: https://jekyllrb.com/
-[clipartmax]: https://www.clipartmax.com/middle/m2i8b1m2K9Z5m2K9_ant-clipart-childrens-ant-cute/
-[demo]: https://cotes2020.github.io/chirpy-demo/
-[wiki]: https://github.com/cotes2020/jekyll-theme-chirpy/wiki
-[contribute-guide]: https://github.com/cotes2020/jekyll-theme-chirpy/blob/master/docs/CONTRIBUTING.md
-[contributors]: https://github.com/cotes2020/jekyll-theme-chirpy/graphs/contributors
-[lib]: https://github.com/cotes2020/chirpy-static-assets
-[vscode]: https://code.visualstudio.com/
-[jetbrains]: https://www.jetbrains.com/?from=jekyll-theme-chirpy
+## Acknowledgements
+
+- [Chirpy Theme](https://github.com/cotes2020/jekyll-theme-chirpy) – The base theme that kickstarted this project.
+- All the contributors and open-source projects that make this journey possible.
+
+---
+
+Feel free to reach out or submit a pull request if you’d like to contribute. Happy coding and sharing!
