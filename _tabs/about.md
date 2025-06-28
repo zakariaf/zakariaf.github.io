@@ -44,22 +44,16 @@ _Developing applications for start-ups in Iran_
 
 ## 🔧 SKILLS
 
-
   - **Technical:** Ruby on Rails, RSpec, Git, Docker, PostgreSQL, Vue.js, Vite, Vuex, GitLab CI/CD, Kamal
-
-
   - **Previous Technical:** Python, PHP Symfony, Laravel, MongoDB, Ansible, Capistrano, Backbone.js, AngularJS, Apache Cordova, J2EE
-
-
   - **Leadership:** Team Building, Project Management, Mentorship, Code Quality Assurance
-
-
   - **Tools & Practices:** Agile Methodologies, Cross-functional Collaboration, Scalable Architecture Design
 
 ---
 
 ## 🚀 SOME OF MY PROJECTS
 
+- **SVG Toolbelt (2025)**: A lightweight, zero-dependency library to add smooth zoom, pan, touch, keyboard controls and fullscreen support to any SVG. 🔗 [GitHub](https://github.com/zakariaf/svg-toolbelt/)
 - **Taxmaro (04/2020 - Present - Through Buzzjective)**: A platform for HR and Payroll
 - **DataGuard (12/2017 - 12/2023 - Through Buzzjective)**: Legal tech for privacy tools and GDPR compliance
 - **Rails Base App (2021 - 2022)**: Starter Template for Rails Projects 🔗 [GitHub](https://github.com/zakariaf/rails-base-app)
@@ -78,14 +72,6 @@ _Developing applications for start-ups in Iran_
 
 ---
 
-## 📺 YOUTUBE CHANNELS
-
-- 🎥 **[@booksips](https://www.youtube.com/@booksips) (2024)**: Book summaries in 1 minute
-- 🎥 **[@MysteryScapes](https://www.youtube.com/@MysteryScapes) (2024)**: A journey into imagination and curiosity
-- 🎥 **[@coran-francais](https://www.youtube.com/@coran-francais) (2023)**: Quran Recitations with French Translations
-
----
-
 ## 🌍 LANGUAGES
 - **English**: Full Professional Proficiency
 - **Kurdish**: Native or Bilingual Proficiency
@@ -99,12 +85,3 @@ _Developing applications for start-ups in Iran_
 ### **Bachelor of Software Engineering**
 **Razi University** | 09/2008 - 03/2013 | Kermanshah, Iran
 
----
-
-## 📚 PUBLICATIONS
-
-### **Conference Paper**
-**Solving TSP in a Weighted Graph Using DNA** (2012)
-Annual Scientific Conference of Razi University
-
-{: .prompt-tip }
