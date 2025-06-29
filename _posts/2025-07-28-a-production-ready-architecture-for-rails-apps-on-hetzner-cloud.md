@@ -129,7 +129,7 @@ This infrastructure creates a **security-first, highly available Rails applicati
 |-----------|---------|---------|--------------|
 | **CloudFlare** | DNS, SSL termination, DDoS protection, CDN | Public | Free |
 | **Hetzner Load Balancer** | Distributes traffic, SSL termination, health checks | Public IP | €6.21 |
-| **Bastion/NAT Gateway** | Single SSH entry point, internet gateway for private servers | Public + Private IP | €3.29 |
+| **Bastion/NAT Gateway** | Single SSH entry point, internet gateway for private servers | Public + Private IP | €3.92 |
 | **App Servers (2x)** | Rails application containers with Solid Cache/Cable | Private IP only | €76.80 |
 | **Jobs Server** | Background job processing with Solid Queue | Private IP only | €6.80 |
 | **PostgreSQL Primary** | Main database with persistent storage | Private IP only | €38.40 |
@@ -241,15 +241,22 @@ The bastion is like having a **single, heavily guarded gate** to your digital fo
 
 ### Step 2.1: Provisioning the Bastion Server
 
-1. **Create the Server** in Hetzner Cloud Console:
+1. **Create the Server**: In the left menu, select "Servers" and then click "Add Server".
+2. **Define Server Parameters**:
    - **Name**: `bastion-server`
-   - **Server Type**: CX22 (sufficient for this role)
-   - **Location**: Choose your preferred region (e.g., `fsn1`)
+   - **Server Type**: CX22 or CAX11 (sufficient for this role)
+   - **Location**: Choose your preferred region (e.g., `Nuremberg`)
    - **Image**: Ubuntu 24.04
    - **Networking**:
      - ✅ **Assign public IPv4** (critical - this is our only public server)
-     - ✅ **Attach to production-network**
+     - ✅ **Attach to our Private Network: production-network**
    - **SSH Key**: Add your public SSH key
+
+- a small server type is sufficient for this role. it's just for SSH access and NAT functionality
+- You don't need to select Firewall, backups, volumes, and all other things in this step.
+
+
+![bastion-server](bastion-server.png){: .normal}
 
 ### Step 2.2: Initial Server Hardening
 
