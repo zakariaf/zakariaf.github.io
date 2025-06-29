@@ -128,13 +128,13 @@ This infrastructure creates a **security-first, highly available Rails applicati
 | Component | Purpose | Access | Monthly Cost |
 |-----------|---------|---------|--------------|
 | **CloudFlare** | DNS, SSL termination, DDoS protection, CDN | Public | Free |
-| **Hetzner Load Balancer** | Distributes traffic, SSL termination, health checks | Public IP | €6.21 |
+| **Hetzner Load Balancer** | Distributes traffic, SSL termination, health checks | Public IP | €5.39 |
 | **Bastion/NAT Gateway** | Single SSH entry point, internet gateway for private servers | Public + Private IP | €3.92 |
 | **App Servers (2x)** | Rails application containers with Solid Cache/Cable | Private IP only | €23.98 |
-| **Jobs Server** | Background job processing with Solid Queue | Private IP only | €6.80 |
-| **PostgreSQL Primary** | Main database with persistent storage | Private IP only | €38.40 |
-| **PostgreSQL Replica** | Read replica for failover and read scaling | Private IP only | €21.50 |
-| **Monitoring Server** | Prometheus + Grafana for observability | Private IP only | €6.80 |
+| **Jobs Server** | Background job processing with Solid Queue | Private IP only | €11.99 |
+| **PostgreSQL Primary** | Main database with persistent storage | Private IP only | €11.99 |
+| **PostgreSQL Replica** | Read replica for failover and read scaling | Private IP only | €11.99 |
+| **Monitoring Server** | Prometheus + Grafana for observability | Private IP only | €5.99 |
 | **Hetzner Object Storage** | File uploads, backups (S3-compatible) | API access via NAT | ~€2/month |
 
 ### Traffic Flow
@@ -520,6 +520,7 @@ Using a dedicated server for background jobs ensures:
 In the left menu, select "Servers" and then click "Add Server".
 
 **Jobs Server:**
+
 - **Name**: `jobs-01`
 - **Server Type**: CX32 (4 vCPU, 8GB RAM)
 - **Location**: Same as your bastion region (e.g., `Falkenstein`)
@@ -541,61 +542,60 @@ This is what we have so far:
 
 ![servers](servers.png){: .normal}
 
+# Step 5: Provision PostgreSQL Database Servers
 
-# Step 5: Database Cluster
+## Step 5.1: Create Database Servers
 
-## Why We Need PostgreSQL with Replication
+We start by provisioning two private servers that will host our Database cluster — one primary and one replica.
 
-A database cluster provides:
+### Primary Database
 
-- **Data Durability**: Replication protects against hardware failures
-- **High Availability**: Automatic failover if primary database fails
-- **Read Scaling**: Distribute read queries across multiple servers
-- **Backup Strategy**: Multiple copies of your critical data
-
-Database failures are catastrophic - replication is essential for any production system.
-
-## How to Create the Database Cluster
-
-### Step 5.1: Create Database Storage Volumes
-
-Database files need persistent, network-attached storage:
-
-```bash
-# Create volumes for database storage
-hcloud volume create --name postgres-primary-data --size 100 --location fsn1
-hcloud volume create --name postgres-replica-data --size 100 --location fsn1
-```
-
-### Step 5.2: Create Database Servers
-
-**PostgreSQL Primary:**
 - **Name**: `db-primary`
-- **Server Type**: CCX23 (4 vCPU, 16GB RAM)
+- **Type**: CAX31 (8 vCPU, 16 GB RAM)
 - **Image**: Ubuntu 24.04
 - **Networking**:
   - ❌ **No public IPv4** (private only)
+  - ❌ **No public IPv6** (private only)
   - ✅ **Attach to production-network**
-- **Cloud Config**: Upload the cloud-init.yaml file
+- **Tags** (optional but recommended):
+  - role=db
+  - env=production
+- **Cloud Config**: Paste the cloud-init configuration we created above
 - **SSH Key**: Add your SSH key
 
-**PostgreSQL Replica:**
+### 🔷 `db-replica` (Hot Standby)
+
 - **Name**: `db-replica`
-- **Server Type**: CCX13 (2 vCPU, 8GB RAM)
-- **Image**: Ubuntu 24.04
-- **Networking**:
-  - ❌ **No public IPv4** (private only)
-  - ✅ **Attach to production-network**
-- **Cloud Config**: Upload the cloud-init.yaml file
-- **SSH Key**: Add your SSH key
+- **Same configuration as Primary Database**
 
-### Step 5.3: Attach Storage Volumes
+> Replica has lighter workload, it handles only read queries and replication, not write load, so we can use a smaller server type (e.g. 2 vCPU, 8 GB RAM)
 
-```bash
-# Attach volumes to database servers
-hcloud volume attach postgres-primary-data db-primary
-hcloud volume attach postgres-replica-data db-replica
-```
+## Step 5.2: Why We Use Separate Volumes for PostgreSQL
+
+Even though each server comes with its own local SSD, we **intentionally use network-attached volumes** for PostgreSQL data.
+
+### ⚠️ Reasons to Use Volumes (Not the Local SSD):
+
+| Reason                     | Description                                                                                                |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Data Persistence**       | If the server crashes, is deleted, or rebuilt, your database survives — volumes are independent of the VM. |
+| **Disaster Recovery**      | Volumes can be snapshotted and re-attached to new servers for fast recovery.                               |
+| **Modular Scaling**        | Need more storage? Resize or swap the volume without touching the base system.                             |
+| **Separation of Concerns** | Keeps your app, OS, and logs separate from mission-critical data — clean architecture.                     |
+| **Docker Compatibility**   | Dockerized PostgreSQL expects persistent mounts for durability — volumes meet that need.                   |
+
+> ✅ Using volumes is a standard best practice in any production-grade setup. It ensures **data resilience, maintainability, and scalability**.
+
+
+## Step 5.3: Create and Attach Persistent Storage Volumes
+
+Now that the servers are running, let’s create the volumes and attach them to the respective machines.
+
+In the left menu, select "Volumes" and then click "Create Volume".
+
+unfortunately, in the Hetzner UI, I cannot create a volume at the moment because of a bug there, when I try to create a volume with 100GB it says volumen cannot be larger than 4GB, and when I try to create a volume with 4GB it says volume cannot be smaller than 10GB.ut I'll update this section when the bug is fixed.
+
+![hetzner-volume-error](hetzner-volume-error.png){: .normal}
 
 # Step 6: Monitoring Server
 
@@ -616,15 +616,19 @@ Without monitoring, you're flying blind in production.
 
 **Monitoring Server:**
 - **Name**: `monitor-01`
-- **Server Type**: CX32 (4 vCPU, 8GB RAM)
+- **Server Type**: CAX21 (4 vCPU, 8GB RAM)
 - **Image**: Ubuntu 24.04
 - **Networking**:
   - ❌ **No public IPv4** (private only)
+  - ❌ **No public IPv6** (private only)
   - ✅ **Attach to production-network**
-- **Cloud Config**: Upload the cloud-init.yaml file
+- **Tags** (optional but recommended):
+  - role=monitoring
+  - env=production
+- **Cloud Config**: Paste the cloud-init configuration we created above
 - **SSH Key**: Add your SSH key
 
-This server will run Prometheus for metrics collection and Grafana for dashboards.
+> This server will run Prometheus for metrics collection and Grafana for dashboards.
 
 # Step 7: Hetzner Load Balancer
 
@@ -637,27 +641,35 @@ A load balancer provides:
 - **SSL Termination**: Handles SSL/TLS encryption/decryption
 - **High Availability**: Single point of entry that's managed by Hetzner
 
-This is what makes your application truly "production-ready" - users always get a response even if servers fail.
+> This is what makes your application truly "production-ready" - users always get a response even if servers fail.
 
 ## How to Create the Load Balancer
 
 ### Step 7.1: Create Hetzner Load Balancer
 
-1. **Navigate to Load Balancers** in Hetzner Cloud Console
-2. **Click "Create Load Balancer"**
-3. **Configure Load Balancer**:
+In the left menu, select "Load Balancers" and then click "Create Load Balancer".
+
+1. **Configure Load Balancer**:
    - **Name**: `rails-lb`
-   - **Location**: Same as your servers (e.g., `fsn1`)
+   - **Location**: Same as your servers (e.g., `Falkenstein`)
    - **Type**: LB-11 (basic tier)
    - **Network**: Select `production-network` (enables private communication)
+   - **Algorithm**: Round Robin (default)
+
+Let's ignore Targets and Services for now, we will add them in the next step.
 
 ### Step 7.2: Add Target Servers
 
+After creating the load balancer, we need to add our application servers as targets. This allows the load balancer to distribute traffic to them.
+To do this, click on the created load balancer(`rails-lb`) in the list, and then:
+
 1. **Go to Targets tab**
-2. **Select "IP" tab**
-3. **Add Private IP addresses**:
-   - `10.0.0.10` (app-01)
-   - `10.0.0.11` (app-02)
+2. Click on **Add Target** dropdown, and then select **Cloud Server**
+3. Then at the right side, select our app servers
+   - app-01
+   - app-02
+
+![load-balancer](load-balancer.png){: .normal}
 
 ### Step 7.3: Configure HTTPS Service
 
