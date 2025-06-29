@@ -2,12 +2,13 @@
 title: "A Production-Ready, Secure, and Scalable Architecture for Ruby on Rails on Hetzner Cloud"
 author: zakaria
 date: 2025-06-04 22:18:00 +0100
-categories: []
-tags: []
+categories: [Infrastructure, Rails]
+tags: [rails, hetzner, kamal, postgresql, docker, devops, production, security, cloudflare, load-balancer]
 media_subpath: /assets/img/posts/2025-07-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud
 image: cover.png
 mermaid: true
 ---
+
 ## The Big Picture: What We're Building
 
 Before diving into the step-by-step implementation, let's understand the complete architecture we'll be creating. This is a fortress-like, security-first infrastructure that provides enterprise-grade capabilities at a fraction of traditional cloud costs.
