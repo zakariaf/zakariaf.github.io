@@ -204,9 +204,12 @@ Think of this as creating the "internal wiring" of our data center before pluggi
 
 This creates the virtual network fabric that all our private servers will use to communicate securely.
 
+![production-network](production-network.png){: .normal}
+
 ### Network IP Planning
 
 We'll use this IP allocation strategy:
+
 ```
 10.0.0.2   - Bastion/NAT Gateway
 10.0.0.10  - App Server 1
