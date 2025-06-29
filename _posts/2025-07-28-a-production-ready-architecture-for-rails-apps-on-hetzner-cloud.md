@@ -130,7 +130,7 @@ This infrastructure creates a **security-first, highly available Rails applicati
 | **CloudFlare** | DNS, SSL termination, DDoS protection, CDN | Public | Free |
 | **Hetzner Load Balancer** | Distributes traffic, SSL termination, health checks | Public IP | €6.21 |
 | **Bastion/NAT Gateway** | Single SSH entry point, internet gateway for private servers | Public + Private IP | €3.92 |
-| **App Servers (2x)** | Rails application containers with Solid Cache/Cable | Private IP only | €76.80 |
+| **App Servers (2x)** | Rails application containers with Solid Cache/Cable | Private IP only | €23.98 |
 | **Jobs Server** | Background job processing with Solid Queue | Private IP only | €6.80 |
 | **PostgreSQL Primary** | Main database with persistent storage | Private IP only | €38.40 |
 | **PostgreSQL Replica** | Read replica for failover and read scaling | Private IP only | €21.50 |
@@ -245,7 +245,7 @@ The bastion is like having a **single, heavily guarded gate** to your digital fo
 2. **Define Server Parameters**:
    - **Name**: `bastion-server`
    - **Server Type**: CX22 or CAX11 (sufficient for this role)
-   - **Location**: Choose your preferred region (e.g., `Nuremberg`)
+   - **Location**: Choose your preferred region (e.g., `Falkenstein`)
    - **Image**: Ubuntu 24.04
    - **Networking**:
      - ✅ **Assign public IPv4** (critical - this is our only public server)
@@ -260,20 +260,29 @@ The bastion is like having a **single, heavily guarded gate** to your digital fo
 
 ### Step 2.2: Initial Server Hardening
 
-Connect to your new bastion server and secure it:
+Connect to your new bastion server and start securing it:
 
 ```bash
-# Update system packages first
+ssh root@YOUR_BASTION_PUBLIC_ID
+```
+
+
+Then we need to update the system packages first
+
+```bash
 sudo apt update && sudo apt upgrade -y
 ```
 
 ### Step 2.3: Create Non-Root User with Sudo Privileges
 
-It's critical to disable direct root login and use a non-root user with sudo privileges:
+It's critical to disable direct root login and use a non-root user with sudo privileges
+
+Follow these steps to create a non-root user:
 
 ```bash
 # Create new user (replace 'deployer' with your preferred username)
 adduser deployer
+# It will prompt you to set a password and fill in user details
 
 # Add user to sudo group
 usermod -aG sudo deployer
@@ -304,29 +313,98 @@ Make these critical changes:
 
 Restart SSH service:
 ```bash
-sudo systemctl restart sshd
+sudo systemctl restart ssh
 ```
 
-**Test your non-root access** before continuing! Open a new terminal and verify you can SSH as the deployer user.
+**Test your non-root access** before continuing! Open a new terminal and verify you can SSH as the deployer user:
+
+```bash
+ssh deployer@YOUR_BASTION_PUBLIC_IP
+```
+
+
+if you close your root terminal, and try to login with root user (`ssh root@YOUR_BASTION_PUBLIC_IP`), you will get an error like this:
+
+```bash
+Permission denied (publickey)
+```
+This is expected since we disabled root login.
+
+From now we close the root terminal and continue with the `deployer` user.
 
 ### Step 2.5: Configure NAT Gateway Functionality
 
 The bastion needs to act as a NAT gateway so private servers can access the internet:
 
 ```bash
-# Enable IP forwarding (allows packet forwarding between interfaces)
-echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+# ------------------------------
+# 1. Enable IP Forwarding
+# ------------------------------
+
+# Enable IP forwarding immediately (in-memory)
+sudo sysctl -w net.ipv4.ip_forward=1
 
 # Make IP forwarding persistent across reboots
+# Remove existing entries to avoid duplicates
+sudo sed -i '/^net.ipv4.ip_forward/d' /etc/sysctl.conf
 echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
 
-# Configure iptables for Network Address Translation
+# ------------------------------
+# 2. Set Up NAT (iptables)
+# ------------------------------
+
+# Configure iptables for Network Address Translation(NAT)
 # This rule translates private IPs to the bastion's public IP
 sudo iptables -t nat -A POSTROUTING -s '10.0.0.0/16' -o eth0 -j MASQUERADE
 
+
+# ------------------------------
+# 3. Save iptables Rules
+# ------------------------------
+
 # Install iptables-persistent to save rules permanently
 sudo apt install iptables-persistent -y
+
+# Save current iptables rules
 sudo netfilter-persistent save
+# Output:
+# run-parts: executing /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
+# run-parts: executing /usr/share/netfilter-persistent/plugins.d/25-ip6tables save
+
+
+# ------------------------------
+# 4. (Optional) Verify Configuration
+# ------------------------------
+
+# Check that IP forwarding is enabled
+sudo sysctl net.ipv4.ip_forward
+# Output should be: net.ipv4.ip_forward = 1
+
+# List NAT rules to confirm MASQUERADE is set
+sudo iptables -t nat -L -n -v
+# Output should show a rule like:
+# Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+#  pkts bytes target     prot opt in     out     source               destination
+
+# Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+#  pkts bytes target     prot opt in     out     source               destination
+
+# Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+#  pkts bytes target     prot opt in     out     source               destination
+
+# Chain POSTROUTING (policy ACCEPT 2 packets, 162 bytes)
+#  pkts bytes target     prot opt in     out     source               destination
+#     0     0 MASQUERADE  0    --  *      eth0    10.0.0.0/16          0.0.0.0/0
+
+# Show routing table
+ip route
+# Output should show:
+# default via 172.31.1.1 dev eth0 proto dhcp src 128.140.86.71 metric 100
+# 10.0.0.0/16 via 10.0.0.1 dev enp7s0 proto dhcp src 10.0.0.2 metric 1003 mtu 1450
+# 10.0.0.1 dev enp7s0 proto dhcp scope link src 10.0.0.2 metric 1003 mtu 1450
+# 172.31.1.1 dev eth0 proto dhcp scope link src 128.140.86.71 metric 100
+# 185.12.64.1 via 172.31.1.1 dev eth0 proto dhcp src 128.140.86.71 metric 100
+# 185.12.64.2 via 172.31.1.1 dev eth0 proto dhcp src 128.140.86.71 metric 100
 ```
 
 ### Step 2.6: Configure Hetzner Cloud Routing
@@ -334,13 +412,17 @@ sudo netfilter-persistent save
 Tell Hetzner Cloud to route internet traffic through our bastion:
 
 1. **Navigate to Networks** in Hetzner Cloud Console
-2. **Select your production-network**
-3. **Go to Routes tab** and click "Add route"
-4. **Configure the route**:
+2. Select your **production-network**
+3. Open the **Routes** tab and click **Add route**
+4. Configure the route as follows:
    - **Destination**: `0.0.0.0/0` (all internet traffic)
-   - **Gateway**: `10.0.0.2` (your bastion's private IP)
+   - **Gateway**: `10.0.0.2` (your bastion’s internal IP)
 
-This ensures all outbound internet requests from private servers route through the bastion's NAT gateway.
+This ensures all internet-bound traffic from private servers is routed through the bastion, which handles NAT translation.
+
+![hetzner-routing](hetzner-routing.png){: .normal}
+
+For the NAT routing to work as intended, we must manually configure the default gateway inside each private VM (server) to point to the bastion’s IP, and the warning you see is about that, but we will do the configuration while creating the application servers in the next step.
 
 # Step 3: Application Servers
 
@@ -359,41 +441,55 @@ This is the difference between a hobby project and a production system that can 
 
 ### Step 3.1: Automated Server Configuration with Cloud-Init
 
-Create a cloud-init script to automatically configure private servers:
+When you create servers in Hetzner Cloud, there's an input field labeled "Cloud config". This lets us automatically configure the server on first boot.
+
+We use this to automatically set networking settings, including:
+
+- Routing all outbound traffic through the bastion server (NAT gateway)
+- Defining custom DNS servers
+- Ensuring that DHCP doesn’t override our gateway or DNS setup
 
 ```yaml
-# cloud-init.yaml
 #cloud-config
-write_files:
-  - path: /etc/systemd/network/10-enp7s0.network
-    content: |
-      [Match]
-      Name=enp7s0
-      [Network]
-      DHCP=yes
-      Gateway=10.0.0.1
-    append: true
-  - path: /etc/systemd/resolved.conf
-    content: |
-      DNS=185.12.64.2 185.12.64.1
-      FallbackDNS=8.8.8.8
-    append: true
-runcmd:
-  - reboot
+network:
+  version: 2
+  ethernets:
+    enp7s0:
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false     # Prevent DHCP from setting default route
+        use-dns: false        # Prevent DHCP from setting DNS servers
+      gateway4: 10.0.0.2      # Bastion’s private IP (NAT gateway)
+      nameservers:
+        addresses:
+          - 185.12.64.2
+          - 185.12.64.1
+          - 8.8.8.8
 ```
+
+> 📌 **Note:** Replace `10.0.0.2` with the actual internal IP of your bastion server (the NAT gateway). All internet-bound traffic will be routed through it.
+
+You don't need to do anything right now, just keep this somewhere. We will use it when creating the application servers.
 
 ### Step 3.2: Create Application Servers
 
 Create two application servers for high availability:
 
+In the left menu, select "Servers" and then click "Add Server".
+
 **App Server 1:**
 - **Name**: `app-01`
-- **Server Type**: CCX23 (4 vCPU, 16GB RAM)
+- **Location**: Same as your bastion region (e.g., `Falkenstein`)
+- **Server Type**: CPX41 or CAX31 (8 vCPU, 16GB RAM) - I pick CAX31 as it's cheaper
 - **Image**: Ubuntu 24.04
 - **Networking**:
   - ❌ **No public IPv4** (private only)
+  - ❌ **No public IPv6** (private only)
   - ✅ **Attach to production-network**
-- **Cloud Config**: Upload the cloud-init.yaml file
+- **Tags** (optional but recommended):
+  - role=app
+  - env=production
+- **Cloud Config**: Paste the cloud-init configuration we created above
 - **SSH Key**: Add your SSH key
 
 **App Server 2:**
@@ -402,34 +498,49 @@ Create two application servers for high availability:
 
 These servers will run your Rails application with Solid Cache and Solid Cable.
 
+![server-app](server-app.png){: .normal}
+
 # Step 4: Jobs Server
 
 ## Why We Need a Dedicated Jobs Server
 
-A dedicated jobs server provides:
+Using a dedicated server for background jobs ensures:
 
 - **Resource Isolation**: Background jobs don't compete with web requests for CPU/memory
 - **Scaling Independence**: Scale job processing separately from web serving
 - **Fault Isolation**: Job failures don't affect web server performance
-- **Specialized Configuration**: Tune the server specifically for job processing
+- **Specialized Tuning**: You can optimize CPU, memory, and threads for job workloads
 
-With Rails 8's Solid Queue, we get Redis-like capabilities without the operational complexity of managing Redis.
+> 🚀 With Rails 8's Solid Queue, we get Redis-like capabilities without the operational complexity of managing Redis.
 
 ## How to Create the Jobs Server
 
 ### Step 4.1: Create Jobs Server
 
+In the left menu, select "Servers" and then click "Add Server".
+
 **Jobs Server:**
 - **Name**: `jobs-01`
 - **Server Type**: CX32 (4 vCPU, 8GB RAM)
+- **Location**: Same as your bastion region (e.g., `Falkenstein`)
 - **Image**: Ubuntu 24.04
 - **Networking**:
   - ❌ **No public IPv4** (private only)
+  - ❌ **No public IPv6** (private only)
   - ✅ **Attach to production-network**
-- **Cloud Config**: Upload the same cloud-init.yaml file
+- **Tags** (optional but recommended):
+  - role=jobs
+  - env=production
+- **Cloud Config**: Paste the cloud-init configuration we created above
 - **SSH Key**: Add your SSH key
 
 This server will run Rails with Solid Queue for background job processing.
+
+
+This is what we have so far:
+
+![servers](servers.png){: .normal}
+
 
 # Step 5: Database Cluster
 
