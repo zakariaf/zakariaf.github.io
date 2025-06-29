@@ -263,7 +263,7 @@ The bastion is like having a **single, heavily guarded gate** to your digital fo
 Connect to your new bastion server and start securing it:
 
 ```bash
-ssh root@YOUR_BASTION_PUBLIC_ID
+ssh root@YOUR_BASTION_PUBLIC_IP
 ```
 
 
