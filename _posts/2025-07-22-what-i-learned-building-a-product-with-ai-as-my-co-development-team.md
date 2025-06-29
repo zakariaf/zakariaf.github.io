@@ -47,11 +47,13 @@ The most elegant solutions often come from removing features, not adding them.
 ## My Takeaways
 
 **✅ What Works:**
+
 - AI is an incredible force multiplier for solo developers
 - Cross-AI collaboration yields better ideas than any single model
 - You can build enterprise-quality products in weeks, not years
 
 **⚠️ What to Watch Out For:**
+
 - BUT you must stay in the driver's seat
 - AI loves over-engineering - resist the temptation
 - Simple solutions often beat sophisticated ones
@@ -61,4 +63,3 @@ The most elegant solutions often come from removing features, not adding them.
 AI doesn't replace thinking - it amplifies it. The developer who learns to leverage AI while maintaining product judgment will have a massive competitive advantage.
 
 Currently in the final stages of my product. More details coming soon! 👀
-
