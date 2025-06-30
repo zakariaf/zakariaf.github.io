@@ -441,7 +441,7 @@ For the NAT routing to work as intended, we must manually configure the default 
 
 ## Step 3: Application Servers
 
-## Why We Need Multiple Application Servers
+### Why We Need Multiple Application Servers
 
 Multiple application servers provide:
 
@@ -484,7 +484,7 @@ These servers will run our Rails application
 
 ## Step 4: Jobs Server
 
-## Why We Need a Dedicated Jobs Server
+### Why We Need a Dedicated Jobs Server
 
 Using a dedicated server for background jobs ensures:
 
@@ -583,7 +583,7 @@ In the left menu, select "Volumes" and then click "Create Volume".
 
 ## Step 6: Monitoring Server
 
-## Why We Need Dedicated Monitoring
+### Why We Need Dedicated Monitoring
 
 A monitoring server provides:
 
@@ -719,7 +719,7 @@ You must repeat this for each server with private ip we have:
 
 ## Step 8: Hetzner Load Balancer
 
-## Why We Need a Load Balancer
+### Why We Need a Load Balancer
 
 A load balancer provides:
 
@@ -754,7 +754,7 @@ In the left menu, select "Load Balancers" and then click "Create Load Balancer".
 
 ## Step 9: CloudFlare Integration
 
-## Why We Need CloudFlare
+### Why We Need CloudFlare
 
 CloudFlare provides:
 
@@ -846,7 +846,7 @@ Go back to Cloudflare dashboard and configure the following for your domain:
 
 ## Step 10: Firewall Configuration
 
-## Why We Need Multi-Layered Firewalls
+### Why We Need Multi-Layered Firewalls
 
 Firewalls provide defense-in-depth security:
 
@@ -1080,7 +1080,7 @@ sudo ufw --force enable
 
 ## Step 11: Database Cluster Setup
 
-## Why We Configure PostgreSQL This Way
+### Why We Configure PostgreSQL This Way
 
 Our PostgreSQL setup provides:
 
