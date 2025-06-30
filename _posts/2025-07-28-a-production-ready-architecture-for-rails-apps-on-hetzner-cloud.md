@@ -1178,197 +1178,441 @@ Apply these steps on all your private servers:
 
 ## Step 12: Database Cluster Setup
 
-### Why We Configure PostgreSQL This Way
+### Why We Use Docker Compose Instead of Kamal Accessories
 
-Our PostgreSQL setup provides:
+We use **Docker Compose** to run PostgreSQL because it provides:
 
-- **Persistent Storage**: Data survives server failures
-- **Streaming Replication**: Near real-time backup with automatic failover capability
-- **Kamal Integration**: Database lifecycle managed consistently with apps
-- **Performance Optimization**: Tuned for Rails workloads
+- **Full Control**: Complete control over PostgreSQL configuration (replication, authentication, WAL, performance tuning)
+- **Persistent Storage**: Direct volume management without relying on Hetzner's buggy volume UI
+- **Simple Reproducibility**: Version-controlled setup that's easy to replicate and maintain
+- **Better Modularity**: Easier to add monitoring, backups, connection pooling, and other PostgreSQL tools
+- **No Host Dependencies**: Completely decoupled from host OS package management
+- **Production Best Practices**: Industry-standard approach for containerized databases
 
-### How to Setup PostgreSQL with Replication
+Using Kamal accessories for PostgreSQL introduces unnecessary abstraction that makes advanced configuration and replication setup complex. With Docker Compose, we stay closer to standard PostgreSQL practices while maintaining container benefits.
 
-### Prepare Storage Volumes
+### How to Setup PostgreSQL with Streaming Replication
 
-Format and mount the attached volumes on both database servers:
+#### Setup PostgreSQL Primary (db-primary)
+
+##### Create Directory Structure
 
 ```bash
-for server in db-primary db-replica; do
-    ssh $server << 'EOF'
-# Format the attached volume
-sudo mkfs.ext4 /dev/sdb
+ssh db-primary
 
-# Create mount point
-sudo mkdir -p /mnt/data/postgresql
-
-# Get UUID for persistent mounting
-UUID=$(sudo blkid -s UUID -o value /dev/sdb)
-
-# Add to fstab for automatic mounting
-echo "UUID=$UUID /mnt/data/postgresql ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
-
-# Mount the volume
-sudo mount -a
-
-# Set proper permissions for PostgreSQL container (user 999)
-sudo chown -R 999:999 /mnt/data/postgresql
-EOF
-done
+# Create organized directory structure
+sudo mkdir -p /opt/postgres/{data,conf,init}
+cd /opt/postgres
 ```
 
-### Configure Kamal for PostgreSQL
+##### Create Docker Compose Configuration
 
-Create your `config/deploy.yml` with PostgreSQL accessories:
+```bash
+sudo nano /opt/postgres/docker-compose.yml
+```
 
 ```yaml
-# config/deploy.yml
-service: myapp
-image: username/myapp
-
-registry:
-  username: your-docker-username
-  password:
-    - KAMAL_REGISTRY_PASSWORD
-
-# SSH configuration using bastion host
-ssh:
-  user: deployer
-  proxy: deployer@BASTION_PUBLIC_IP
-
-# Server roles mapped to private IPs
-servers:
-  web:
-    hosts:
-      - 10.0.0.3  # app-01
-      - 10.0.0.4  # app-02
-    options:
-      memory: 2g
-      cpus: 2
-  job:
-    hosts:
-      - 10.0.0.5  # jobs-01
-    cmd: bundle exec rails solid_queue:start
-    options:
-      memory: 1g
-
-# Environment variables
-env:
-  clear:
-    RAILS_ENV: production
-    RAILS_SERVE_STATIC_FILES: true
-    RAILS_LOG_TO_STDOUT: true
-  secret:
-    - RAILS_MASTER_KEY
-    - DATABASE_URL
-    - POSTGRES_PASSWORD
-
-# PostgreSQL accessories
-accessories:
-  db:
+version: '3.9'
+services:
+  postgres:
     image: postgres:16
-    host: 10.0.0.6  # db-primary
-    port: 5432
-    env:
-      clear:
-        POSTGRES_USER: rails_app
-        POSTGRES_DB: rails_production
-      secret:
-        - POSTGRES_PASSWORD
+    container_name: postgres-primary
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: rails_production
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super_secure_postgres_password
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - /mnt/data/postgresql:/var/lib/postgresql/data
-
-  db-replica:
-    image: postgres:16
-    host: 10.0.0.7  # db-replica
-    port: 5432
-    volumes:
-      - /mnt/data/postgresql:/var/lib/postgresql/data
-
-# Proxy configuration
-proxy:
-  ssl: false  # CloudFlare handles SSL
-  host: yourdomain.com
-  healthcheck:
-    path: /up
-    port: 3000
+      - ./data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+      - ./conf/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./conf/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    command: ["postgres", "-c", "config_file=/var/lib/postgresql/data/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 ```
 
-### Configure Secrets
+> Replace `super_secure_postgres_password` with your real password.
 
-Create `.kamal/secrets`:
+##### Create PostgreSQL Configuration
+
+```bash
+sudo nano /opt/postgres/conf/postgresql.conf
+```
+
+```conf
+# Basic Connection Settings
+listen_addresses = '*'
+port = 5432
+max_connections = 100
+
+# Memory Settings (optimized for 16GB server)
+shared_buffers = 4GB                    # 25% of total RAM
+effective_cache_size = 12GB             # 75% of total RAM
+work_mem = 32MB                         # Safe for 100 connections
+maintenance_work_mem = 1GB              # Faster maintenance operations
+
+# WAL and Replication Settings
+wal_level = replica
+archive_mode = off
+max_wal_senders = 10
+wal_keep_size = 1GB
+hot_standby = on
+
+# Performance Settings
+checkpoint_completion_target = 0.9
+checkpoint_timeout = 5min
+max_wal_size = 2GB
+min_wal_size = 512MB
+random_page_cost = 1.1
+
+# Connection and Worker Settings
+max_worker_processes = 8
+max_parallel_workers = 6
+max_parallel_workers_per_gather = 4
+
+# Logging Settings
+log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+log_statement = 'none'
+log_min_duration_statement = 1000
+log_checkpoints = on
+log_connections = on
+log_disconnections = on
+log_lock_waits = on
+
+# Autovacuum Settings
+autovacuum = on
+autovacuum_vacuum_threshold = 50
+autovacuum_analyze_threshold = 50
+autovacuum_work_mem = 512MB
+```
+
+##### Create Authentication Configuration
+
+```bash
+sudo nano /opt/postgres/conf/pg_hba.conf
+```
+
+```conf
+# PostgreSQL Client Authentication Configuration File
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# Local connections (needed for Docker exec commands)
+local   all             postgres                                trust
+local   all             all                                     md5
+
+# IPv4 local connections
+host    all             postgres        127.0.0.1/32            trust
+host    all             all             127.0.0.1/32            md5
+
+# IPv6 local connections
+host    all             postgres        ::1/128                 trust
+host    all             all             ::1/128                 md5
+
+# Replication connection from replica server
+host    replication     replicator      10.0.0.7/32             scram-sha-256
+
+# Application connections from app servers
+host    all             rails_app       10.0.0.3/32             scram-sha-256
+host    all             rails_app       10.0.0.4/32             scram-sha-256
+
+# Application connections from jobs server
+host    all             rails_app       10.0.0.5/32             scram-sha-256
+
+# Monitoring access from monitoring server
+host    all             rails_app       10.0.0.8/32             scram-sha-256
+
+# Administrative access from bastion
+host    all             postgres        10.0.0.2/32             scram-sha-256
+host    all             rails_app       10.0.0.2/32             scram-sha-256
+```
+
+##### Create User Initialization Script
+
+```bash
+sudo nano /opt/postgres/init/01-create-users.sql
+```
+
+```sql
+-- Create replication user for streaming replication
+CREATE USER replicator REPLICATION LOGIN ENCRYPTED PASSWORD 'very_secure_replication_password';
+
+-- Create application user for Rails
+CREATE USER rails_app WITH ENCRYPTED PASSWORD 'very_secure_rails_password';
+
+-- Grant database creation privileges to rails_app
+ALTER USER rails_app CREATEDB;
+
+-- Create application database
+CREATE DATABASE rails_production OWNER rails_app;
+
+-- Grant all privileges on the database
+GRANT ALL PRIVILEGES ON DATABASE rails_production TO rails_app;
+
+-- Connect to the rails_production database to set schema privileges
+\c rails_production
+
+-- Grant comprehensive schema privileges
+GRANT USAGE ON SCHEMA public TO rails_app;
+GRANT CREATE ON SCHEMA public TO rails_app;
+GRANT ALL ON SCHEMA public TO rails_app;
+
+-- Set default privileges for future objects
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO rails_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO rails_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO rails_app;
+
+-- Grant privileges on existing objects
+GRANT ALL ON ALL TABLES IN SCHEMA public TO rails_app;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO rails_app;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO rails_app;
+
+-- Make rails_app the owner of the public schema for full control
+ALTER SCHEMA public OWNER TO rails_app;
+
+-- Display created users for verification
+\c postgres
+\du
+
+-- Display databases
+\l
+```
+
+> Replace `very_secure_replication_password` with your real password.
+> Replace `very_secure_rails_password` with your real password.
+
+##### Start the Primary Database
+
+```bash
+# Set proper permissions for PostgreSQL data directory
+sudo chown -R 999:999 /opt/postgres/data
+
+# Ensure data directory has correct permissions
+sudo chmod 700 /opt/postgres/data
+
+# Start the PostgreSQL primary server
+sudo docker compose up -d
+
+# Check that the container started successfully
+sudo docker ps
+
+# Monitor the logs to ensure proper startup
+sudo docker logs -f postgres-primary
+```
+
+##### Verify Primary Setup
+
+```bash
+# Check that users were created successfully. This should show all three users
+sudo docker exec -it postgres-primary psql -U postgres -c "\du"
+
+# Verify database creation. This should show rails_production database
+sudo docker exec -it postgres-primary psql -U postgres -c "\l"
+
+# Test application user connection
+sudo docker exec -it postgres-primary psql -U rails_app -d rails_production -c "SELECT current_user, current_database();"
+
+# Check replication configuration
+sudo docker exec -it postgres-primary psql -U postgres -c "SHOW wal_level;"
+sudo docker exec -it postgres-primary psql -U postgres -c "SHOW max_wal_senders;"
+```
+
+#### Setup PostgreSQL Replica (db-replica)
+
+##### Create Replica Directory Structure
+
+```bash
+ssh db-replica
+
+# Create directory structure (simpler for replica)
+sudo mkdir -p /opt/postgres/{data,conf}
+cd /opt/postgres
+```
+
+##### Create Replica Docker Compose Configuration
+
+```bash
+sudo nano /opt/postgres/docker-compose.yml
+```
+
+```yaml
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-replica
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super_secure_postgres_password
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+```
+
+##### Initialize Replica with pg_basebackup
+
+**Important**: The replica data must be initialized from the primary using `pg_basebackup`. This creates a byte-for-byte copy of the primary database and sets up streaming replication.
+
+```bash
+# Stop any running containers and clear data directory
+sudo docker compose down 2>/dev/null || true
+sudo rm -rf /opt/postgres/data/*
+
+# Use pg_basebackup to clone the primary database
+# This creates a complete copy and sets up replication automatically
+sudo docker run --rm \
+  -v /opt/postgres/data:/backup \
+  --entrypoint="" \
+  postgres:16 \
+  bash -c "PGPASSWORD='very_secure_replication_password' pg_basebackup -h 10.0.0.6 -U replicator -D /backup -Fp -Xs -P -R"
+```
+
+**Command explanation:**
+- `-h 10.0.0.6`: Connect to primary server
+- `-U replicator`: Use the replication user we created
+- `-D /backup`: Target directory for the backup
+- `-Fp`: Plain format (file-per-tablespace)
+- `-Xs`: Stream WAL while backing up
+- `-P`: Show progress
+- `-R`: Write recovery configuration (creates `standby.signal` and `postgresql.auto.conf`)
+
+##### Start the Replica
+
+```bash
+# Set proper permissions
+sudo chown -R 999:999 /opt/postgres/data
+
+# Start the replica server
+sudo docker compose up -d
+
+# Monitor replica startup logs
+sudo docker logs -f postgres-replica
+```
+
+You should see logs indicating it's entering standby mode and starting replication:
+```
+LOG:  entering standby mode
+LOG:  redo starts at 0/2000028
+LOG:  consistent recovery state reached
+LOG:  database system is ready to accept read only connections
+LOG:  started streaming WAL from primary at 0/3000000
+```
+
+#### Verify Replication is Working
+
+##### Check Replication Status on Primary
+
+```bash
+ssh db-primary
+
+# Check replication status - should show connected replica
+sudo docker exec -it postgres-primary psql -U postgres -c "
+SELECT
+    client_addr,
+    state,
+    sent_lsn,
+    write_lsn,
+    flush_lsn,
+    replay_lsn,
+    sync_state
+FROM pg_stat_replication;"
+```
+
+**Expected output**: You should see one row showing the replica's IP (10.0.0.7) with `state = 'streaming'`
+
+##### Check Replica Status
+
+```bash
+ssh db-replica
+
+# Verify replica is in recovery mode
+sudo docker exec -it postgres-replica psql -U postgres -c "SELECT pg_is_in_recovery();"
+```
+
+**Expected output**: `t` (true) - confirming it's a replica
+
+```bash
+# Check replication lag
+sudo docker exec -it postgres-replica psql -U postgres -c "
+SELECT
+    status,
+    receive_start_lsn,
+    received_lsn,
+    last_msg_send_time,
+    last_msg_receipt_time
+FROM pg_stat_wal_receiver;"
+```
+
+##### Test Replication with Real Data
+
+```bash
+# On primary: Create test data
+ssh db-primary
+sudo docker exec -it postgres-primary psql -U rails_app -d rails_production -c "
+CREATE TABLE replication_test (
+    id SERIAL PRIMARY KEY,
+    message TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+INSERT INTO replication_test (message) VALUES ('Hello from primary server!');
+SELECT * FROM replication_test;
+"
+
+# On replica: Verify data was replicated (wait a few seconds)
+ssh db-replica
+sudo docker exec -it postgres-replica psql -U rails_app -d rails_production -c "
+SELECT * FROM replication_test;
+"
+
+# Clean up test table on primary
+ssh db-primary
+sudo docker exec -it postgres-primary psql -U rails_app -d rails_production -c "
+DROP TABLE replication_test;
+"
+```
+
+**Expected result**: You should see the same data on both primary and replica, confirming replication is working.
+
+#### Update Your Kamal Configuration
+
+Now that PostgreSQL is running, update your `.kamal/secrets` file to connect to your database:
 
 ```bash
 # .kamal/secrets
 KAMAL_REGISTRY_PASSWORD=your_docker_registry_password
 RAILS_MASTER_KEY=your_rails_master_key
-POSTGRES_PASSWORD=very_strong_postgres_password
 
-# Database connection using private IP
-DATABASE_URL=postgresql://rails_app:very_strong_postgres_password@10.0.0.6:5432/rails_production
+# Database connection to your PostgreSQL primary
+DATABASE_URL=postgresql://rails_app:very_secure_rails_password@10.0.0.6:5432/rails_production
+
+# Optional: Read replica connection for read-heavy operations
+REPLICA_DATABASE_URL=postgresql://rails_app:very_secure_rails_password@10.0.0.7:5432/rails_production
 ```
 
-### Setup PostgreSQL Primary
 
-```bash
-# Deploy the primary database
-kamal accessory boot db
+You now have a production-ready PostgreSQL cluster with:
 
-# Configure for replication
-kamal accessory exec db -i << 'EOF'
-# Edit postgresql.conf for replication
-cat >> /var/lib/postgresql/data/postgresql.conf << 'PGCONF'
-# Replication settings
-listen_addresses = '*'
-wal_level = replica
-max_wal_senders = 5
-wal_keep_size = 256
-hot_standby = on
-PGCONF
+✅ **Primary-Replica Replication**: Automatic failover capability and read scaling
+✅ **Proper Security**: User isolation and network-based authentication
+✅ **Performance Tuning**: Optimized configuration for Rails workloads
+✅ **Health Monitoring**: Built-in health checks and status monitoring
+✅ **Verified Setup**: Confirmed replication is working with test data
 
-# Edit pg_hba.conf for replication and app access
-cat >> /var/lib/postgresql/data/pg_hba.conf << 'PGHBA'
-# Replication connection from replica
-host replication replicator 10.0.0.7/32 scram-sha-256
-# Application connections
-host all rails_app 10.0.0.3/32 scram-sha-256
-host all rails_app 10.0.0.4/32 scram-sha-256
-host all rails_app 10.0.0.5/32 scram-sha-256
-PGHBA
 
-# Create replication user
-psql -U postgres -c "CREATE USER replicator REPLICATION LOGIN ENCRYPTED PASSWORD 'replica_password_here';"
-
-# Create application user and database
-psql -U postgres -c "CREATE USER rails_app WITH ENCRYPTED PASSWORD 'very_strong_postgres_password';"
-psql -U postgres -c "CREATE DATABASE rails_production OWNER rails_app;"
-psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE rails_production TO rails_app;"
-EOF
-
-# Restart to apply configuration
-kamal accessory reboot db
-```
-
-### Setup PostgreSQL Replica
-
-```bash
-# Stop replica if running
-kamal accessory stop db-replica
-
-# Clear data directory on replica host
-ssh db-replica 'sudo rm -rf /mnt/data/postgresql/*'
-
-# Create base backup from primary
-kamal accessory run db-replica -i << 'EOF'
-export PGPASSWORD='replica_password_here'
-pg_basebackup -h 10.0.0.6 -D /var/lib/postgresql/data -U replicator -v -P -R -X stream
-EOF
-
-# Start replica in standby mode
-kamal accessory boot db-replica
-```
-
-### Step 13: Rails Application Configuration
+## Step 13: Rails Application Configuration
 
 ### Why We Configure Rails This Way
 
@@ -1381,7 +1625,7 @@ Rails 8 with Solid components provides:
 
 ### How to Configure Rails for Production
 
-### Rails Application Setup
+#### Rails Application Setup
 
 **Gemfile additions:**
 ```ruby
@@ -1432,7 +1676,7 @@ production:
       writing: primary
 ```
 
-### Application Metrics
+#### Application Metrics
 
 ```ruby
 # config/initializers/yabeda.rb
