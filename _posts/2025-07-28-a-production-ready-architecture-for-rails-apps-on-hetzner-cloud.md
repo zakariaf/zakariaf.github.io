@@ -660,19 +660,7 @@ In the left menu, select "Load Balancers" and then click "Create Load Balancer".
       * Then at the right side, select our app servers
         - app-01
         - app-02
-    - **Services**:
-      * Click on Edit button (pen icon) right side of the existing service
-      * Configure service, Keep the default values just change the path to `/up` (our rails check domain):
-        - Protocol: HTTP
-        - Port: 80
-        - Path: `/up`
-        - Interval: 15s
-        - Timeout: 5s
-        - Retries: 3
-        - Status Codes: ["2??", "3??"]
-        - Domain: leave it empty
-        - Reponse: leave it empty
-        - TLS: Disabled
+    - **Services**: Delete the existing service, we will create it later.
 
 ![lb-targets](lb-targets.png){: .normal}
 ![lb-services](lb-services.png){: .normal}
@@ -694,36 +682,80 @@ This is your first line of defense and performance optimization.
 
 ### Step 8.1: Generate CloudFlare Origin Certificate
 
-For maximum security, use "Full (Strict)" SSL mode:
-
-1. **In CloudFlare Dashboard**:
+1. **In CloudFlare Dashboard for your domain**:
    - Go to SSL/TLS → Origin Server
    - Click "Create Certificate"
    - Keep default settings and generate
-   - Copy both certificate and private key
+   - Now you can see certificate and private key. which we will use in the next step.
+
+![cloudflare-origin](cloudflare-origin.png){: .normal}
+![cloudflare-create](cloudflare-create.png){: .normal}
+![cloudflare-keys](cloudflare-keys.png){: .normal}
 
 ### Step 8.2: Upload Certificate to Load Balancer
 
 1. **In Hetzner Cloud Console**:
-   - Go to Load Balancers → rails-lb → Services
-   - Edit your HTTPS service
-   - Under Certificates → Add certificate → Upload certificate
-   - Paste CloudFlare origin certificate and private key
+   - Go to Load Balancers → Click on rails-lb → Go to Services tab
+   - Click on **Add Service** -> **New Service**:
+      - **Protocol**: HTTPS
+      - **Listen Port**: 443
+      - **Destination Port**: 80
+      - **HTTP Redirect**: Enabled (to redirect HTTP to HTTPS)
+    - Click on **Add Certificate**
+      - In the right side, Click on **Add Certificate** then **Upload Certificate**
+      - Name: `cloudflare-certificate-1`
+      - Paste CloudFlare origin certificate and private key from previous step
+        - **Certificate**: Paste the Origin Certificate content from CloudFlare
+        - **Private Key**: Paste the Private Key content from CloudFlare
+      - And click on Save Certificate button
+
+![lb-certificates](lb-certificates.png){: .normal}
+
+    - Click on Edit button (pen icon) right side of the existing service
+      - Keep everything as it is just change the path to `/up` (our rails health check url)
+      - **Health Check**:
+        - Protocol: HTTP
+        - Port: 80
+        - Path: `/up`
+        - Interval: 15s
+        - Timeout: 5s
+        - Retries: 3
+        - Status Codes: ["2??", "3??"]
+        - Domain: leave it empty
+        - Reponse: leave it empty
+        - TLS: Disabled
+
+![lb-health-check](lb-health-check.png){: .normal}
 
 ### Step 8.3: Configure DNS and SSL
 
+Go back to Cloudflare dashboard and configure the following for your domain:
+
 1. **DNS Records**:
+
+- In the left side click on **DNS** and then click on **Records** button:
+- Then click on **Add Record** button and add the following record:
+
    ```
    Type: A
-   Name: yourdomain.com
+   Name: @
    Content: LOAD_BALANCER_PUBLIC_IP
    Proxy: Enabled (orange cloud)
    ```
 
+- Replace `LOAD_BALANCER_PUBLIC_IP` with the public IP of your **Hetzner Load Balancer**.
+- and click on **Save**
+
+![dns-add-record](dns-add-record.png){: .normal}
+![dns-lb-ip](dns-lb-ip.png){: .normal}
+
 2. **SSL/TLS Settings**:
-   - Set encryption mode to "Full (strict)"
-   - Enable "Always Use HTTPS"
-   - Enable "HTTP Strict Transport Security (HSTS)"
+
+- In the left side click on **SSL/TLS** and then click on **Edge Certificates**:
+  - Enable "Always Use HTTPS"
+  - You can enable "HTTP Strict Transport Security (HSTS)" as well.
+
+![use-https](use-https.png){: .normal}
 
 # Step 9: Firewall Configuration
 
