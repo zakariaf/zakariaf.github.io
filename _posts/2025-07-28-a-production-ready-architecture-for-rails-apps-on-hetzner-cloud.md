@@ -994,9 +994,9 @@ sudo ufw default allow outgoing
 sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 
 # HTTP access from app servers (for API calls, webhooks, etc.)
-# Replace 10.0.0.03 and 10.0.0.04 with the actual private IPs of your app servers
-sudo ufw allow from 10.0.0.03 to any port 80 proto tcp
-sudo ufw allow from 10.0.0.04 to any port 80 proto tcp
+# Replace 10.0.0.3 and 10.0.0.4 with the actual private IPs of your app servers
+sudo ufw allow from 10.0.0.3 to any port 80 proto tcp
+sudo ufw allow from 10.0.0.4 to any port 80 proto tcp
 
 # Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
 sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
@@ -1030,9 +1030,9 @@ sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 sudo ufw allow from 10.0.0.2 to any port 5432 proto tcp
 
 # HTTP access from app servers (for API calls, webhooks, etc.)
-# Replace 10.0.0.03 and 10.0.0.04 with the actual private IPs of your app servers
-sudo ufw allow from 10.0.0.03 to any port 5432 proto tcp
-sudo ufw allow from 10.0.0.04 to any port 5432 proto tcp
+# Replace 10.0.0.3 and 10.0.0.4 with the actual private IPs of your app servers
+sudo ufw allow from 10.0.0.3 to any port 5432 proto tcp
+sudo ufw allow from 10.0.0.4 to any port 5432 proto tcp
 
 # Database access from jobs server (Solid Queue operations)
 # Replace 10.0.0.5 with the actual private IP of your jobs server
@@ -1076,8 +1076,8 @@ sudo ufw allow from 10.0.0.2 to any port 5432 proto tcp
 sudo ufw allow from 10.0.0.6 to any port 9394 proto tcp
 
 # Read-only access from app servers (if configured for read scaling)
-sudo ufw allow from 10.0.0.03 to any port 5432 proto tcp
-sudo ufw allow from 10.0.0.04 to any port 5432 proto tcp
+sudo ufw allow from 10.0.0.3 to any port 5432 proto tcp
+sudo ufw allow from 10.0.0.4 to any port 5432 proto tcp
 
 # Read-only access from jobs server (for reporting, analytics jobs)
 sudo ufw allow from 10.0.0.5 to any port 5432 proto tcp
@@ -1121,7 +1121,62 @@ sudo ufw allow from 10.0.0.2 to any port 3001 proto tcp
 sudo ufw --force enable
 ```
 
-## Step 11: Database Cluster Setup
+## Step 11: Install Docker on All Servers
+
+### Why We Need Docker
+
+We are using Docker to run our Rails application and PostgreSQL database and monitoring tools in containers, which provides:
+
+- **Isolation**: Each service runs in its own container, reducing conflicts.
+- **Scalability**: Easily scale services up or down as needed.
+- **Consistency**: Ensures the same environment across all stages of development and production.
+
+### How to Install Docker on All Servers
+
+first connect to server `app-01` by running this in your terminal:
+
+```bash
+ssh app-01
+```
+
+Then you will be connected to the server, and run these commands there:
+
+```bash
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update the Apt package index:
+sudo apt-get update
+
+# Install the Docker packages, latest version:
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Verify that the installation is successful by running the hello-world image:
+sudo docker run hello-world
+
+# the above command downloads a test image and runs it in a container. When the container runs, it prints a confirmation message and exits.
+```
+
+Apply these steps on all your private servers:
+
+* `app-01`
+* `app-02`
+* `jobs-01`
+* `monitor-01`
+* `db-primary`
+* `db-replica`
+
+## Step 12: Database Cluster Setup
 
 ### Why We Configure PostgreSQL This Way
 
@@ -1158,25 +1213,6 @@ sudo mount -a
 
 # Set proper permissions for PostgreSQL container (user 999)
 sudo chown -R 999:999 /mnt/data/postgresql
-EOF
-done
-```
-
-### Install Docker on All Servers
-
-```bash
-for server in app-01 app-02 jobs-01 db-primary db-replica; do
-    ssh $server << 'EOF'
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-
-# Add deployer user to docker group
-sudo usermod -aG docker deployer
-
-# Start and enable Docker
-sudo systemctl start docker
-sudo systemctl enable docker
 EOF
 done
 ```
@@ -1332,7 +1368,7 @@ EOF
 kamal accessory boot db-replica
 ```
 
-### Step 12: Rails Application Configuration
+### Step 13: Rails Application Configuration
 
 ### Why We Configure Rails This Way
 
@@ -1422,7 +1458,7 @@ Rails.application.routes.draw do
 end
 ```
 
-## Step 13: Monitoring Server Setup
+## Step 14: Monitoring Server Setup
 
 ### Why We Need Comprehensive Monitoring
 
@@ -1542,7 +1578,7 @@ ssh -L 9090:10.0.0.8:9090 hetzner-bastion
 # Then visit http://localhost:9090
 ```
 
-## Step 14: Deployment and Operations
+## Step 15: Deployment and Operations
 
 ### How to Deploy with Kamal
 
@@ -1579,7 +1615,7 @@ kamal accessory reboot db-replica
 kamal deploy
 ```
 
-## Step 15: Backup and Maintenance
+## Step 16: Backup and Maintenance
 
 ### Automated Backup Strategy
 
