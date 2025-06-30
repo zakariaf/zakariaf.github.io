@@ -672,50 +672,93 @@ e.g:
 ssh app-01
 ```
 
+### Configure Routing and DNS (Persistent Setup for Private Servers)
 
-### Configure Routing and DNS
+Each private server (e.g. `app-01`, `app-02`, `jobs-01`, `monitor-01`) needs access to the internet via the **bastion server acting as NAT**. We’ll configure:
 
-Connect to each app server and configure internet access:
+* A **persistent default route** via the Hetzner internal gateway (`10.0.0.1`)
+* **Reliable DNS** resolution with fallback servers
+* **Reboot-safe setup** using Netplan
+
+#### Step-by-Step Instructions
+
+SSH into the server (e.g. `app-01`):
 
 ```bash
 ssh app-01
 ```
 
-Then run the following commands to set the default gateway to the bastion server:
+Then run the following:
+
+#### Create or Edit the Netplan Config
 
 ```bash
-# Add default route via Hetzner gateway (which routes through bastion)
-sudo ip route add default via 10.0.0.1 dev enp7s0
+sudo nano /etc/netplan/99-private-network.yaml
+```
 
-# Configure DNS via systemd-resolved
-sudo mkdir -p /etc/systemd/resolved.conf.d/
-sudo tee /etc/systemd/resolved.conf.d/dns.conf << 'EOF'
-[Resolve]
-DNS=185.12.64.2 185.12.64.1 8.8.8.8 8.8.4.4
-FallbackDNS=1.1.1.1 1.0.0.1
-EOF
+Paste this configuration:
 
-# Restart systemd-resolved
-sudo systemctl restart systemd-resolved
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp7s0:
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false
+        use-dns: false
+      routes:
+        - to: 0.0.0.0/0
+          via: 10.0.0.1
+          on-link: true
+      nameservers:
+        addresses:
+          - 185.12.64.2
+          - 185.12.64.1
+          - 8.8.8.8
+          - 8.8.4.4
+          - 1.1.1.1
+          - 1.0.0.1
+```
 
-# Make the route persistent across reboots
-echo 'ip route add default via 10.0.0.1 dev enp7s0' | sudo tee -a /etc/rc.local
-sudo chmod +x /etc/rc.local
+> 📌 Be sure to check the indentation — YAML is strict.
 
-# Test internet connectivity
+#### Fix Permissions (suppress warnings)
+
+```bash
+sudo chmod 600 /etc/netplan/99-private-network.yaml
+```
+
+#### 3. Apply the Configuration
+
+```bash
+sudo netplan apply
+```
+
+#### Test Connectivity, Internet Access (through bastion):
+
+```bash
 curl -4 -s https://ifconfig.me
-# Should return your bastion's public IP (e.g., 128.140.86.71)
+# Should return your bastion's public IP (e.g. 128.140.86.71)
+```
 
-# Test DNS resolution
+#### DNS Resolution:
+
+```bash
 nslookup google.com
 # Should return valid IP addresses
 ```
 
-You must repeat this for each server with private ip we have:
+#### Repeat for All Private Servers
 
-  - apps (`app-01`, `app-02`)
-  - jobs (`jobs-01`)
-  - monitoring (`monitor-01`)
+Apply this configuration on all your private servers:
+
+* `app-01`
+* `app-02`
+* `jobs-01`
+* `monitor-01`
+* `db-primary`
+* `db-replica`
 
 ## Step 8: Hetzner Load Balancer
 
