@@ -1,7 +1,7 @@
 ---
 title: "What I learned building a product with AI as my co-development team"
 author: zakaria
-date: 2025-07-22 12:18:00 +0100
+date: 2025-06-22 12:18:00 +0100
 categories: [Product Development, AI]
 tags: [AI, Product Development, Solo Founder, Tech Startup, Machine Learning, Software Development]
 ---
