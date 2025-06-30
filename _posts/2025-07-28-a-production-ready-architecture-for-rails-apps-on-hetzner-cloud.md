@@ -177,9 +177,9 @@ We'll build this infrastructure step by step, following the logical order of dep
 
 ---
 
-# Step 1: Production Private Network
+## Step 1: Production Private Network
 
-## Why We Need a Private Network
+### Why We Need a Private Network
 
 Before creating any servers, we need to establish the network foundation. A private network provides:
 
@@ -190,9 +190,9 @@ Before creating any servers, we need to establish the network foundation. A priv
 
 Think of this as creating the "internal wiring" of our data center before plugging in any devices.
 
-## How to Create the Private Network
+### How to Create the Private Network
 
-### Step 1.1: Creating the Hetzner Cloud Private Network
+#### Creating the Hetzner Cloud Private Network
 
 1. **Navigate to the Hetzner Cloud Console**: Log in to your Hetzner Cloud project.
 
@@ -220,9 +220,9 @@ We'll use this IP allocation strategy:
 10.0.0.8  - Monitoring Server
 ```
 
-# Step 2: Bastion Host / NAT Gateway
+## Step 2: Bastion Host / NAT Gateway
 
-## Why We Need a Bastion Host
+### Why We Need a Bastion Host
 
 The bastion host is the **cornerstone of our security model**. It serves three critical functions:
 
@@ -237,9 +237,9 @@ Without a bastion host, you'd either need:
 
 The bastion is like having a **single, heavily guarded gate** to your digital fortress.
 
-## How to Create and Configure the Bastion Host
+### How to Create and Configure the Bastion Host
 
-### Step 2.1: Provisioning the Bastion Server
+#### Provisioning the Bastion Server
 
 1. **Create the Server**: In the left menu, select "Servers" and then click "Add Server".
 2. **Define Server Parameters**:
@@ -258,7 +258,7 @@ The bastion is like having a **single, heavily guarded gate** to your digital fo
 
 ![bastion-server](bastion-server.png){: .normal}
 
-### Step 2.2: Initial Server Hardening
+#### Initial Server Hardening
 
 Connect to your new bastion server and start securing it:
 
@@ -273,7 +273,7 @@ Then we need to update the system packages first
 sudo apt update && sudo apt upgrade -y
 ```
 
-### Step 2.3: Create Non-Root User with Sudo Privileges
+#### Create Non-Root User with Sudo Privileges
 
 It's critical to disable direct root login and use a non-root user with sudo privileges
 
@@ -299,7 +299,7 @@ chmod 700 /home/deployer/.ssh
 chmod 600 /home/deployer/.ssh/authorized_keys
 ```
 
-### Step 2.4: Configure SSH Security
+#### Configure SSH Security
 
 Edit the SSH daemon configuration to enhance security:
 
@@ -332,7 +332,7 @@ This is expected since we disabled root login.
 
 From now we close the root terminal and continue with the `deployer` user.
 
-### Step 2.5: Configure NAT Gateway Functionality
+#### Configure NAT Gateway Functionality
 
 The bastion needs to act as a NAT gateway so private servers can access the internet:
 
@@ -422,7 +422,7 @@ curl -4 -s https://ifconfig.me
 # curl -s https://ipinfo.io/ip
 ```
 
-### Step 2.6: Configure Hetzner Cloud Routing
+#### Configure Hetzner Cloud Routing
 
 Tell Hetzner Cloud to route internet traffic through our bastion:
 
@@ -439,7 +439,7 @@ This ensures all internet-bound traffic from private servers is routed through t
 
 For the NAT routing to work as intended, we must manually configure the default gateway inside each private VM (server) to point to the bastion’s IP, and the warning you see is about that, but we will do the configuration while creating the application servers in the next step.
 
-# Step 3: Application Servers
+## Step 3: Application Servers
 
 ## Why We Need Multiple Application Servers
 
@@ -452,9 +452,9 @@ Multiple application servers provide:
 
 This is the difference between a hobby project and a production system that can handle real user load.
 
-## How to Create the Application Servers
+### How to Create the Application Servers
 
-### Step 3.1: Create Application Servers
+### Create Application Servers
 
 Create two application servers for high availability:
 
@@ -482,7 +482,7 @@ These servers will run our Rails application
 
 ![server-app](server-app.png){: .normal}
 
-# Step 4: Jobs Server
+## Step 4: Jobs Server
 
 ## Why We Need a Dedicated Jobs Server
 
@@ -495,9 +495,9 @@ Using a dedicated server for background jobs ensures:
 
 > 🚀 With Rails 8's Solid Queue, we get Redis-like capabilities without the operational complexity of managing Redis.
 
-## How to Create the Jobs Server
+### How to Create the Jobs Server
 
-### Step 4.1: Create Jobs Server
+### Create Jobs Server
 
 In the left menu, select "Servers" and then click "Add Server".
 
@@ -524,9 +524,9 @@ This is what we have so far:
 
 ![servers](servers.png){: .normal}
 
-# Step 5: Provision PostgreSQL Database Servers
+## Step 5: Provision PostgreSQL Database Servers
 
-## Step 5.1: Create Database Servers
+### Create Database Servers
 
 We start by provisioning two private servers that will host our Database cluster — one primary and one replica.
 
@@ -552,7 +552,7 @@ We start by provisioning two private servers that will host our Database cluster
 
 > Replica has lighter workload, it handles only read queries and replication, not write load, so we can use a smaller server type (e.g. 2 vCPU, 8 GB RAM)
 
-## Step 5.2: Why We Use Separate Volumes for PostgreSQL
+### Why We Use Separate Volumes for PostgreSQL
 
 Even though each server comes with its own local SSD, we **intentionally use network-attached volumes** for PostgreSQL data.
 
@@ -569,7 +569,7 @@ Even though each server comes with its own local SSD, we **intentionally use net
 > ✅ Using volumes is a standard best practice in any production-grade setup. It ensures **data resilience, maintainability, and scalability**.
 
 
-## Step 5.3: Create and Attach Persistent Storage Volumes
+### Create and Attach Persistent Storage Volumes
 
 Now that the servers are running, let’s create the volumes and attach them to the respective machines.
 
@@ -581,7 +581,7 @@ In the left menu, select "Volumes" and then click "Create Volume".
 
 ![hetzner-volume-error](hetzner-volume-error.png){: .normal}
 
-# Step 6: Monitoring Server
+## Step 6: Monitoring Server
 
 ## Why We Need Dedicated Monitoring
 
@@ -594,9 +594,9 @@ A monitoring server provides:
 
 Without monitoring, you're flying blind in production.
 
-## How to Create the Monitoring Server
+### How to Create the Monitoring Server
 
-### Step 6.1: Create Monitoring Server
+### Create Monitoring Server
 
 **Monitoring Server:**
 - **Name**: `monitor-01`
@@ -614,7 +614,7 @@ Without monitoring, you're flying blind in production.
 
 > This server will run Prometheus for metrics collection and Grafana for dashboards.
 
-# Step 7: Configure Private Server Internet Access
+## Step 7: Configure Private Server Internet Access
 
 After creating each private server, we need to configure them to access the internet through our bastion NAT gateway.
 
@@ -625,7 +625,7 @@ But before that we need to be able to connect to our servers, and it's not possi
 
 only bastion server has a public IP, so we must connect to the others through the bastion server. To do this we need some configs in our ssh local machine.
 
-### Step 7.1: Configure SSH Access
+### Configure SSH Access
 
 Open your `~/.ssh/config` file and add the following configuration:
 Don't forget to replace `BASTION_PUBLIC_IP` with the actual public IP of your bastion server. and the user `deployer` with the user you created in the bastion server, and all private IPs with the actual private IPs of your servers.
@@ -673,7 +673,7 @@ ssh app-01
 ```
 
 
-### Step 7.2: Configure Routing and DNS
+### Configure Routing and DNS
 
 Connect to each app server and configure internet access:
 
@@ -717,7 +717,7 @@ You must repeat this for each server with private ip we have:
   - jobs (`jobs-01`)
   - monitoring (`monitor-01`)
 
-# Step 8: Hetzner Load Balancer
+## Step 8: Hetzner Load Balancer
 
 ## Why We Need a Load Balancer
 
@@ -730,9 +730,9 @@ A load balancer provides:
 
 > This is what makes your application truly "production-ready" - users always get a response even if servers fail.
 
-## How to Create the Load Balancer
+### How to Create the Load Balancer
 
-### Step 8: Create Hetzner Load Balancer
+### Create Hetzner Load Balancer
 
 In the left menu, select "Load Balancers" and then click "Create Load Balancer".
 
@@ -752,7 +752,7 @@ In the left menu, select "Load Balancers" and then click "Create Load Balancer".
 ![lb-targets](lb-targets.png){: .normal}
 ![lb-services](lb-services.png){: .normal}
 
-# Step 9: CloudFlare Integration
+## Step 9: CloudFlare Integration
 
 ## Why We Need CloudFlare
 
@@ -765,9 +765,9 @@ CloudFlare provides:
 
 This is your first line of defense and performance optimization.
 
-## How to Configure CloudFlare
+### How to Configure CloudFlare
 
-### Step 9.1: Generate CloudFlare Origin Certificate
+### Generate CloudFlare Origin Certificate
 
 1. **In CloudFlare Dashboard for your domain**:
    - Go to SSL/TLS → Origin Server
@@ -779,7 +779,7 @@ This is your first line of defense and performance optimization.
 ![cloudflare-create](cloudflare-create.png){: .normal}
 ![cloudflare-keys](cloudflare-keys.png){: .normal}
 
-### Step 9.2: Upload Certificate to Load Balancer
+### Upload Certificate to Load Balancer
 
 1. **In Hetzner Cloud Console**:
    - Go to Load Balancers → Click on rails-lb → Go to Services tab
@@ -814,7 +814,7 @@ This is your first line of defense and performance optimization.
 
 ![lb-health-check](lb-health-check.png){: .normal}
 
-### Step 9.3: Configure DNS and SSL
+### Configure DNS and SSL
 
 Go back to Cloudflare dashboard and configure the following for your domain:
 
@@ -844,7 +844,7 @@ Go back to Cloudflare dashboard and configure the following for your domain:
 
 ![use-https](use-https.png){: .normal}
 
-# Step 10: Firewall Configuration
+## Step 10: Firewall Configuration
 
 ## Why We Need Multi-Layered Firewalls
 
@@ -857,9 +857,9 @@ Firewalls provide defense-in-depth security:
 
 **Critical**: Hetzner Cloud Firewalls don't filter traffic between servers on the same private network, so host-based firewalls are essential.
 
-## How to Configure Firewalls
+### How to Configure Firewalls
 
-### Step 10.1: Hetzner Cloud Firewalls (Perimeter Defense)
+### Hetzner Cloud Firewalls (Perimeter Defense)
 
 In the left menu, select "Firewalls" and then click "Create Firewall".
 
@@ -874,7 +874,7 @@ In the left menu, select "Firewalls" and then click "Create Firewall".
 ![firewalls-bastion-servers](firewalls-bastion-servers.png){: .normal}
 
 
-### Step 10.2: Host-Based Firewalls (Internal Segmentation)
+### Host-Based Firewalls (Internal Segmentation)
 
 Now after saving those changes, you can easily connect to each server just by typing `ssh <server-name>`.
 
@@ -1078,7 +1078,7 @@ sudo ufw allow from 10.0.0.2 to any port 3001 proto tcp
 sudo ufw --force enable
 ```
 
-# Step 11: Database Cluster Setup
+## Step 11: Database Cluster Setup
 
 ## Why We Configure PostgreSQL This Way
 
@@ -1089,9 +1089,9 @@ Our PostgreSQL setup provides:
 - **Kamal Integration**: Database lifecycle managed consistently with apps
 - **Performance Optimization**: Tuned for Rails workloads
 
-## How to Setup PostgreSQL with Replication
+### How to Setup PostgreSQL with Replication
 
-### Step 11.1: Prepare Storage Volumes
+### Prepare Storage Volumes
 
 Format and mount the attached volumes on both database servers:
 
@@ -1119,7 +1119,7 @@ EOF
 done
 ```
 
-### Step 11.2: Install Docker on All Servers
+### Install Docker on All Servers
 
 ```bash
 for server in app-01 app-02 jobs-01 db-primary db-replica; do
@@ -1138,7 +1138,7 @@ EOF
 done
 ```
 
-### Step 11.3: Configure Kamal for PostgreSQL
+### Configure Kamal for PostgreSQL
 
 Create your `config/deploy.yml` with PostgreSQL accessories:
 
@@ -1215,7 +1215,7 @@ proxy:
     port: 3000
 ```
 
-### Step 11.4: Configure Secrets
+### Configure Secrets
 
 Create `.kamal/secrets`:
 
@@ -1229,7 +1229,7 @@ POSTGRES_PASSWORD=very_strong_postgres_password
 DATABASE_URL=postgresql://rails_app:very_strong_postgres_password@10.0.0.6:5432/rails_production
 ```
 
-### Step 11.5: Setup PostgreSQL Primary
+### Setup PostgreSQL Primary
 
 ```bash
 # Deploy the primary database
@@ -1270,7 +1270,7 @@ EOF
 kamal accessory reboot db
 ```
 
-### Step 11.6: Setup PostgreSQL Replica
+### Setup PostgreSQL Replica
 
 ```bash
 # Stop replica if running
@@ -1289,9 +1289,9 @@ EOF
 kamal accessory boot db-replica
 ```
 
-# Step 12: Rails Application Configuration
+### Step 12: Rails Application Configuration
 
-## Why We Configure Rails This Way
+### Why We Configure Rails This Way
 
 Rails 8 with Solid components provides:
 
@@ -1300,9 +1300,9 @@ Rails 8 with Solid components provides:
 - **Solid Cable**: Database-backed WebSocket connections
 - **Simplified Stack**: Everything runs on PostgreSQL
 
-## How to Configure Rails for Production
+### How to Configure Rails for Production
 
-### Step 12.1: Rails Application Setup
+### Rails Application Setup
 
 **Gemfile additions:**
 ```ruby
@@ -1353,7 +1353,7 @@ production:
       writing: primary
 ```
 
-### Step 12.2: Application Metrics
+### Application Metrics
 
 ```ruby
 # config/initializers/yabeda.rb
@@ -1379,9 +1379,9 @@ Rails.application.routes.draw do
 end
 ```
 
-# Step 13: Monitoring Server Setup
+## Step 13: Monitoring Server Setup
 
-## Why We Need Comprehensive Monitoring
+### Why We Need Comprehensive Monitoring
 
 Monitoring provides:
 
@@ -1390,9 +1390,9 @@ Monitoring provides:
 - **Database Metrics**: PostgreSQL performance and replication status
 - **Business Metrics**: Track user activity, revenue, custom KPIs
 
-## How to Setup Monitoring
+### How to Setup Monitoring
 
-### Step 13.1: Install Monitoring Stack
+### Install Monitoring Stack
 
 ```bash
 ssh monitor-01 << 'EOF'
@@ -1485,7 +1485,7 @@ docker-compose up -d
 EOF
 ```
 
-### Step 13.2: Access Monitoring Dashboards
+### Access Monitoring Dashboards
 
 You can access the monitoring tools via SSH tunneling through the bastion:
 
@@ -1499,11 +1499,11 @@ ssh -L 9090:10.0.0.8:9090 hetzner-bastion
 # Then visit http://localhost:9090
 ```
 
-# Step 14: Deployment and Operations
+## Step 14: Deployment and Operations
 
-## How to Deploy with Kamal
+### How to Deploy with Kamal
 
-### Step 14.1: Initial Deployment
+### Initial Deployment
 
 ```bash
 # Setup servers and deploy for the first time
@@ -1516,7 +1516,7 @@ kamal app details
 kamal app logs --follow
 ```
 
-### Step 14.2: Regular Operations
+### Regular Operations
 
 ```bash
 # Deploy new versions
@@ -1536,11 +1536,11 @@ kamal accessory reboot db-replica
 kamal deploy
 ```
 
-# Step 15: Backup and Maintenance
+## Step 15: Backup and Maintenance
 
-## Automated Backup Strategy
+### Automated Backup Strategy
 
-### Step 15.1: Database Backups
+### Database Backups
 
 ```bash
 # Create backup script on bastion
@@ -1576,7 +1576,7 @@ echo "0 3 * * * root /opt/scripts/backup-postgres.sh" | sudo tee -a /etc/crontab
 EOF
 ```
 
-### Step 15.2: System Maintenance
+### System Maintenance
 
 ```bash
 # Create system update script
