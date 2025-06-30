@@ -774,114 +774,184 @@ Firewalls provide defense-in-depth security:
 
 ### Step 9.1: Hetzner Cloud Firewalls (Perimeter Defense)
 
+In the left menu, select "Firewalls" and then click "Create Firewall".
+
 **Bastion Firewall:**
 1. Create firewall: `bastion-firewall`
 2. Inbound Rules:
-   - Allow TCP port 22 from YOUR_IP/32 only
+   - Allow TCP port 22 from and IP, or from YOUR_IP/32 only
    - Allow ICMP for diagnostics
 3. Apply to: bastion-server only
 
-**Load Balancer Firewall:**
-1. Create firewall: `lb-firewall`
-2. Inbound Rules:
-   - Allow TCP port 80 from All IPv4/IPv6
-   - Allow TCP port 443 from All IPv4/IPv6
-3. Apply to: Load Balancer only
+![firewalls-bastion-rules](firewalls-bastion-rules.png){: .normal}
+![firewalls-bastion-servers](firewalls-bastion-servers.png){: .normal}
+
 
 ### Step 9.2: Host-Based Firewalls (Internal Segmentation)
 
-Configure SSH access to your servers first:
+First of all we need to be able to connect to our servers, but it's not possibel to do it simply by using
+`ssh root@YOUR_SERVER_PUBLIC_IP` because our servers have no public IP. look at them:
+
+![servers-final-list](servers-final-list.png){: .normal}
+
+only bastion server has a public IP, so must connect to the others through the bastion server. To do this we need some configs in our ssh local machine.
+
+Open your `~/.ssh/config` file and add the following configuration:
+Don't forget to replace `BASTION_PUBLIC_IP` with the actual public IP of your bastion server. and the user `deployer` with the user you created in the bastion server, and all private IPs with the actual private IPs of your servers.
+
+Just remember only the bastion server use `deployer` user, the others use `root` user.
 
 ```bash
 # ~/.ssh/config
 Host hetzner-bastion
   HostName BASTION_PUBLIC_IP
   User deployer
-  IdentityFile ~/.ssh/your_hetzner_private_key
-
-Host app-* db-* jobs-* monitor-*
-  User deployer
-  IdentityFile ~/.ssh/your_hetzner_private_key
-  ProxyJump hetzner-bastion
 
 Host app-01
-  HostName 10.0.0.10
+  HostName 10.0.0.3
+  User root
+  ProxyJump hetzner-bastion
 Host app-02
-  HostName 10.0.0.11
+  HostName 10.0.0.4
+  User root
+  ProxyJump hetzner-bastion
 Host jobs-01
-  HostName 10.0.0.30
+  HostName 10.0.0.5
+  User root
+  ProxyJump hetzner-bastion
 Host db-primary
-  HostName 10.0.0.20
+  HostName 10.0.0.6
+  User root
+  ProxyJump hetzner-bastion
 Host db-replica
-  HostName 10.0.0.21
+  HostName 10.0.0.7
+  User root
+  ProxyJump hetzner-bastion
 Host monitor-01
-  HostName 10.0.0.40
+  HostName 10.0.0.8
+  User root
+  ProxyJump hetzner-bastion
 ```
 
-**App Servers (10.0.0.10, 10.0.0.11):**
+Now after saving those changes, you can easily connect to each server just by typing `ssh <server-name>`.
+
 ```bash
-for server in app-01 app-02; do
-    ssh $server << 'EOF'
+ssh app-01
+```
+
+**App Servers:**
+as we mentioned before, Hetzner Cloud Firewalls don't filter traffic between servers on the same private network, so host-based firewalls are essential. to do this, we need to connect to each server and apply some changes:
+
+first connect to server `app-01` by running this in your terminal:
+
+```bash
+ssh app-01
+```
+
+Then you will be connected to the server, and run these commands there:
+
+```bash
+# Update and upgrade the system packages
+sudo apt update && sudo apt upgrade -y
+
+# Install UFW (Uncomplicated Firewall)
 sudo apt install ufw -y
+
+# Set default policies
+# Deny all incoming traffic by default
+# Allow all outgoing traffic by default
+# This is a good starting point for security
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 
-# SSH from bastion only
+# SSH from bastion only. Replace 10.0.0.2 with the actual private IP of your bastion server
 sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 
-# App traffic from load balancer private IP
-sudo ufw allow from LB_PRIVATE_IP to any port 3000 proto tcp
+# App traffic from load balancer private IP. Replace 10.0.0.9 with the actual private IP of your load balancer
+sudo ufw allow from 10.0.0.9 to any port 80 proto tcp
 
-# Monitoring access
-sudo ufw allow from 10.0.0.40 to any port 9394 proto tcp
+# Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
+sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
 
 sudo ufw --force enable
-EOF
-done
 ```
 
-**Jobs Server (10.0.0.30):**
+Run the exactly the same commands for `app-02` server. to do this, just open a new terminal and run:
+
 ```bash
-ssh jobs-01 << 'EOF'
+ssh app-02
+```
+
+Then run the same commands as above.
+
+**Jobs Server:**
+
+We will do the same for the jobs server, but we need to allow access from app servers as well, because jobs server needs to communicate with app servers. and there is no income traffic from load balancer to jobs server, so we don't need to allow that.
+
+first connect to server `jobs-01` by running this in your terminal:
+
+```bash
+ssh jobs-01
+```
+
+Then you will be connected to the server, and run these commands there:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+
 sudo apt install ufw -y
+
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 
-# SSH from bastion only
+# SSH from bastion only. Replace 10.0.0.2 with the actual private IP of your bastion server
 sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 
-# Monitoring access
-sudo ufw allow from 10.0.0.40 to any port 9394 proto tcp
+# HTTP access from app servers (for API calls, webhooks, etc.)
+# Replace 10.0.0.03 and 10.0.0.04 with the actual private IPs of your app servers
+sudo ufw allow from 10.0.0.03 to any port 80 proto tcp
+sudo ufw allow from 10.0.0.04 to any port 80 proto tcp
+
+# Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
+sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
 
 sudo ufw --force enable
-EOF
 ```
 
-**PostgreSQL Primary (10.0.0.20):**
+**PostgreSQL Primary:**
+
+We will do the same for the primary database server, but we need to allow access from app servers and jobs server as well, because they need to communicate with the database. and there is no income traffic from load balancer to database server, so we don't need to allow that. and we need to allow access from the replica server for replication.
+first connect to server `db-primary` by running this in your terminal:
+
 ```bash
-ssh db-primary << 'EOF'
+ssh db-primary
+```
+
+Then you will be connected to the server, and run these commands there:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+
 sudo apt install ufw -y
+
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 
-# SSH from bastion only
+# SSH from bastion only. Replace 10.0.0.2 with the actual private IP of your bastion server
 sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 
-# Database access from app servers
-sudo ufw allow from 10.0.0.10 to any port 5432 proto tcp
-sudo ufw allow from 10.0.0.11 to any port 5432 proto tcp
+# HTTP access from app servers (for API calls, webhooks, etc.)
+# Replace 10.0.0.03 and 10.0.0.04 with the actual private IPs of your app servers
+sudo ufw allow from 10.0.0.03 to any port 80 proto tcp
+sudo ufw allow from 10.0.0.04 to any port 80 proto tcp
 
-# Database access from jobs server
-sudo ufw allow from 10.0.0.30 to any port 5432 proto tcp
+# Replication from replica server. Replace 10.0.0.7 with the actual private IP of your replica server
+sudo ufw allow from 10.0.0.7 to any port 9394 proto tcp
 
-# Replication from replica server
-sudo ufw allow from 10.0.0.21 to any port 5432 proto tcp
-
-# Monitoring access
-sudo ufw allow from 10.0.0.40 to any port 9187 proto tcp
+# Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
+sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
 
 sudo ufw --force enable
-EOF
 ```
 
 **PostgreSQL Replica (10.0.0.21):**
