@@ -645,7 +645,7 @@ A load balancer provides:
 
 ## How to Create the Load Balancer
 
-### Step 7.1: Create Hetzner Load Balancer
+### Step 7: Create Hetzner Load Balancer
 
 In the left menu, select "Load Balancers" and then click "Create Load Balancer".
 
@@ -655,36 +655,27 @@ In the left menu, select "Load Balancers" and then click "Create Load Balancer".
    - **Type**: LB-11 (basic tier)
    - **Network**: Select `production-network` (enables private communication)
    - **Algorithm**: Round Robin (default)
+   - **Targets**:
+      * Click on **Add Target** dropdown, and then select **Cloud Server**
+      * Then at the right side, select our app servers
+        - app-01
+        - app-02
+    - **Services**:
+      * Click on Edit button (pen icon) right side of the existing service
+      * Configure service, Keep the default values just change the path to `/up` (our rails check domain):
+        - Protocol: HTTP
+        - Port: 80
+        - Path: `/up`
+        - Interval: 15s
+        - Timeout: 5s
+        - Retries: 3
+        - Status Codes: ["2??", "3??"]
+        - Domain: leave it empty
+        - Reponse: leave it empty
+        - TLS: Disabled
 
-Let's ignore Targets and Services for now, we will add them in the next step.
-
-### Step 7.2: Add Target Servers
-
-After creating the load balancer, we need to add our application servers as targets. This allows the load balancer to distribute traffic to them.
-To do this, click on the created load balancer(`rails-lb`) in the list, and then:
-
-1. **Go to Targets tab**
-2. Click on **Add Target** dropdown, and then select **Cloud Server**
-3. Then at the right side, select our app servers
-   - app-01
-   - app-02
-
-![load-balancer](load-balancer.png){: .normal}
-
-### Step 7.3: Configure HTTPS Service
-
-1. **Go to Services tab**
-2. **Click "Add service"**
-3. **Configure HTTPS service**:
-   - **Protocol**: HTTPS
-   - **Listen Port**: 443
-   - **Destination Port**: 3000
-   - **Health Check**:
-     - Protocol: HTTP
-     - Port: 3000
-     - Path: `/up`
-     - Interval: 15s
-     - Status Codes: ["200"]
+![lb-targets](lb-targets.png){: .normal}
+![lb-services](lb-services.png){: .normal}
 
 # Step 8: CloudFlare Integration
 
