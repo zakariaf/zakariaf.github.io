@@ -1558,9 +1558,11 @@ FROM pg_stat_wal_receiver;"
 
 ##### Test Replication with Real Data
 
+**On primary: Create test data**
+
 ```bash
-# On primary: Create test data
 ssh db-primary
+
 sudo docker exec -it postgres-primary psql -U rails_app -d rails_production -c "
 CREATE TABLE replication_test (
     id SERIAL PRIMARY KEY,
@@ -1570,18 +1572,23 @@ CREATE TABLE replication_test (
 INSERT INTO replication_test (message) VALUES ('Hello from primary server!');
 SELECT * FROM replication_test;
 "
+```
 
-# On replica: Verify data was replicated (wait a few seconds)
+
+**On replica**: Verify data was replicated (wait a few seconds)
+
+```bash
 ssh db-replica
-sudo docker exec -it postgres-replica psql -U rails_app -d rails_production -c "
-SELECT * FROM replication_test;
-"
 
-# Clean up test table on primary
+sudo docker exec -it postgres-replica psql -U rails_app -d rails_production -c "SELECT * FROM replication_test;"
+```
+
+**Clean up test table on primary**:
+
+```bash
 ssh db-primary
-sudo docker exec -it postgres-primary psql -U rails_app -d rails_production -c "
-DROP TABLE replication_test;
-"
+
+sudo docker exec -it postgres-primary psql -U rails_app -d rails_production -c "DROP TABLE replication_test;"
 ```
 
 **Expected result**: You should see the same data on both primary and replica, confirming replication is working.
