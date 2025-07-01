@@ -957,7 +957,7 @@ sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 sudo ufw allow from 10.0.0.9 to any port 80 proto tcp
 
 # Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
-sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
+sudo ufw allow from 10.0.0.8 to any port 9100 proto tcp
 
 sudo ufw --force enable
 ```
@@ -999,7 +999,7 @@ sudo ufw allow from 10.0.0.3 to any port 80 proto tcp
 sudo ufw allow from 10.0.0.4 to any port 80 proto tcp
 
 # Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
-sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
+sudo ufw allow from 10.0.0.8 to any port 9100 proto tcp
 
 sudo ufw --force enable
 ```
@@ -1042,7 +1042,7 @@ sudo ufw allow from 10.0.0.5 to any port 5432 proto tcp
 sudo ufw allow from 10.0.0.7 to any port 5432 proto tcp
 
 # Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
-sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
+sudo ufw allow from 10.0.0.8 to any port 9100 proto tcp
 
 sudo ufw --force enable
 ```
@@ -1073,7 +1073,7 @@ sudo ufw allow from 10.0.0.2 to any port 22 proto tcp
 sudo ufw allow from 10.0.0.2 to any port 5432 proto tcp
 
 # Replication from primary db server. Replace 10.0.0.6 with the actual private IP of your primary server
-sudo ufw allow from 10.0.0.6 to any port 9394 proto tcp
+sudo ufw allow from 10.0.0.6 to any port 5432 proto tcp
 
 # Read-only access from app servers (if configured for read scaling)
 sudo ufw allow from 10.0.0.3 to any port 5432 proto tcp
@@ -1083,7 +1083,7 @@ sudo ufw allow from 10.0.0.4 to any port 5432 proto tcp
 sudo ufw allow from 10.0.0.5 to any port 5432 proto tcp
 
 # Monitoring access. Replace 10.0.0.8 with the actual private IP of your monitoring server
-sudo ufw allow from 10.0.0.8 to any port 9394 proto tcp
+sudo ufw allow from 10.0.0.8 to any port 9100 proto tcp
 
 sudo ufw --force enable
 ```
@@ -1726,12 +1726,12 @@ scrape_configs:
 
   - job_name: 'rails-apps'
     static_configs:
-      - targets: ['10.0.0.3:9394', '10.0.0.4:9394']
+      - targets: ['10.0.0.3:9100', '10.0.0.4:9100']
     metrics_path: '/metrics'
 
   - job_name: 'rails-jobs'
     static_configs:
-      - targets: ['10.0.0.5:9394']
+      - targets: ['10.0.0.5:9100']
     metrics_path: '/metrics'
 ```
 
