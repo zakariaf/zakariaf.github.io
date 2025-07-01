@@ -578,6 +578,7 @@ In the left menu, select "Volumes" and then click "Create Volume".
 > ⚠️ **Temporary Issue with Hetzner Volumes**
 > As of June 2025, unfortunately, in the Hetzner UI, I cannot create a volume at the moment because of a bug there, when I try to create a volume with 100GB it says volumen cannot be larger than 4GB, and when I try to create a volume with 4GB it says volume cannot be smaller than 10GB. But I'll update this section when the bug is fixed.
 
+> **UPDATED**: It's not a bug, Hetzner only makes a certain amount of resources available to each customer. And if I want more resources I have to send them a limit request. which I'll do later, but for now, I will continue with the tutorial without volumes, and I will update this section when I get the volumes.
 
 ![hetzner-volume-error](hetzner-volume-error.png){: .normal}
 
