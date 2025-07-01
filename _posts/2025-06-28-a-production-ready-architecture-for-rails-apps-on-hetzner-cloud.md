@@ -1629,20 +1629,41 @@ Monitoring provides:
 - **Application Performance**: Monitor Rails request times, error rates
 - **Database Metrics**: PostgreSQL performance and replication status
 - **Business Metrics**: Track user activity, revenue, custom KPIs
+- **Proactive Alerts**: Know about problems before users do
+- **Historical Data**: Analyze trends and plan capacity
+- **Troubleshooting**: Quickly identify root causes of issues
 
-### How to Setup Monitoring
+Without monitoring, you're flying blind in production. Node exporter specifically gives us **system-level metrics** that are critical for production monitoring:
 
-#### Create monitoring Structure
+#### 🖥️ **System Resource Monitoring**
+
+- **CPU Usage**: Per-core utilization, load averages, context switches
+- **Memory Usage**: RAM utilization, swap usage, buffer/cache metrics
+- **Disk I/O**: Read/write operations, disk utilization, queue depths
+- **Network I/O**: Bytes sent/received, packet counts, error rates
+
+#### 🚨 **Proactive Alerting Capabilities**
+
+- **Capacity Planning**: Know when to scale before hitting limits
+- **Performance Degradation**: Detect slowdowns before users notice
+- **Resource Exhaustion**: Alert when disk/memory/CPU hits thresholds
+- **Hardware Issues**: Identify failing disks, network interfaces
+
+### How to Setup Complete Monitoring
+
+#### Create Central Monitoring Stack
+
+First, let's set up the central monitoring server with Prometheus, Grafana, and PostgreSQL exporter.
 
 ```bash
 ssh monitor-01
 
 # Create monitoring directory
-mkdir -p /opt/monitoring
+sudo mkdir -p /opt/monitoring
 cd /opt/monitoring
 ```
 
-#### Create Monitoring Docker Compose file
+#### Create Monitoring Docker Compose Configuration
 
 ```bash
 sudo nano /opt/monitoring/docker-compose.yml
@@ -1654,6 +1675,7 @@ Copy and paste the following configuration:
 services:
   prometheus:
     image: prom/prometheus:latest
+    container_name: prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -1663,10 +1685,14 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
     restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     ports:
       - "3001:3000"
     volumes:
@@ -1674,22 +1700,31 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=strong_admin_password_here
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3001
     restart: unless-stopped
 
   postgres_exporter:
-    image: prometheuscommunity/postgres-exporter
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://rails_app:very_strong_postgres_password@10.0.0.6:5432/rails_production?sslmode=disable"
+      PGHOST: "10.0.0.6"
+      PGPORT: "5432"
+      PGUSER: "rails_app"
+      PGPASSWORD: "your_actual_password_with_special_chars"
+      PGDATABASE: "rails_production"
+      PGSSLMODE: "disable"
     ports:
       - "9187:9187"
     restart: unless-stopped
 
   loki:
     image: grafana/loki:latest
+    container_name: loki
     ports:
       - "3100:3100"
     volumes:
       - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
 
 volumes:
@@ -1698,8 +1733,8 @@ volumes:
   loki_data:
 ```
 
-> Replace `strong_admin_password_here` with your real password.
-> Replace `very_strong_postgres_password` with your real PostgreSQL password for user `rails_app`.
+> **Important**: Replace `strong_admin_password_here` with your real Grafana admin password.
+> Replace `very_secure_rails_password` with your actual PostgreSQL password for user `rails_app`.
 > Replace `10.0.0.6` with the actual private IP of your PostgreSQL primary server.
 
 #### Create Prometheus Configuration
@@ -1714,64 +1749,268 @@ Copy and paste the following configuration:
 # Prometheus configuration file
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
 
 scrape_configs:
+  # Prometheus itself
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
+  # PostgreSQL metrics
   - job_name: 'postgres'
     static_configs:
-      - targets: ['localhost:9187']
+      - targets: ['postgres_exporter:9187']
+    scrape_interval: 10s
 
-  - job_name: 'rails-apps'
+  # Application servers system metrics
+  - job_name: 'app-servers'
     static_configs:
       - targets: ['10.0.0.3:9100', '10.0.0.4:9100']
+    scrape_interval: 5s
     metrics_path: '/metrics'
 
-  - job_name: 'rails-jobs'
+  # Jobs server system metrics
+  - job_name: 'jobs-server'
     static_configs:
       - targets: ['10.0.0.5:9100']
+    scrape_interval: 5s
     metrics_path: '/metrics'
+
+  # Database servers system metrics
+  - job_name: 'database-servers'
+    static_configs:
+      - targets: ['10.0.0.6:9100', '10.0.0.7:9100']
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+
+  # Future Rails application metrics (uncomment when Rails apps are deployed)
+  # - job_name: 'rails-apps'
+  #   static_configs:
+  #     - targets: ['10.0.0.3:3000', '10.0.0.4:3000']
+  #   metrics_path: '/metrics'
+  #   scrape_interval: 10s
+
+  # - job_name: 'rails-jobs'
+  #   static_configs:
+  #     - targets: ['10.0.0.5:3000']
+  #   metrics_path: '/metrics'
+  #   scrape_interval: 10s
 ```
 
-#### Start monitoring stack
+#### Start the Central Monitoring Stack
 
 ```bash
-docker compose up -d
+# Start all monitoring services
+sudo docker compose up -d
+
+# Verify all containers are running
+sudo docker ps
+
+# Check logs to ensure proper startup
+sudo docker logs prometheus
+sudo docker logs grafana
+sudo docker logs postgres_exporter
 ```
 
-### Access Monitoring Dashboards
+#### Install Node Exporter on All Servers
+
+Now we need to install node exporter on each server to collect system metrics. Run these steps on **all servers**: `app-01`, `app-02`, `jobs-01`, `db-primary`, `db-replica`.
+
+**For each server, execute:**
+
+```bash
+ssh app-01  # Replace with: app-02, jobs-01, db-primary, db-replica
+
+# Create monitoring directory
+sudo mkdir -p /opt/monitoring
+cd /opt/monitoring
+
+# Create node exporter configuration
+sudo nano docker-compose.yml
+```
+
+Copy and paste the following configuration:
+
+```yaml
+services:
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"  # External port 9100 maps to internal port 9100
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--web.listen-address=0.0.0.0:9100'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    pid: host
+    network_mode: host
+```
+
+**Start node exporter on each server:**
+
+```bash
+# Start node exporter
+sudo docker compose up -d
+
+# Verify it's running
+sudo docker ps
+
+# Test metrics endpoint locally
+curl http://localhost:9100/metrics | head -10
+```
+
+**Repeat this process for all servers:**
+- `app-01`
+- `app-02`
+- `jobs-01`
+- `db-primary`
+- `db-replica`
+
+#### Verify Monitoring Setup
+
+**Test connectivity from monitoring server:**
+
+```bash
+ssh monitor-01
+
+# Test each node exporter endpoint
+curl http://10.0.0.3:9100/metrics | head -5  # app-01
+curl http://10.0.0.4:9100/metrics | head -5  # app-02
+curl http://10.0.0.5:9100/metrics | head -5  # jobs-01
+curl http://10.0.0.6:9100/metrics | head -5  # db-primary
+curl http://10.0.0.7:9100/metrics | head -5  # db-replica
+
+# Test PostgreSQL exporter
+sudo docker exec -it postgres_exporter wget -qO- http://localhost:9187/metrics | head -5
+```
+
+**Restart Prometheus to pick up new targets:**
+
+```bash
+cd /opt/monitoring
+sudo docker compose restart prometheus
+```
+
+#### Access Monitoring Dashboards
 
 You can access the monitoring tools via SSH tunneling through the bastion:
 
-To set up the SSH tunnel, run the following commands in your terminal:
+**Access Grafana Dashboard:**
 ```bash
-# Grafana dashboard
+# Create SSH tunnel for Grafana
 ssh -L 3001:10.0.0.8:3001 hetzner-bastion
 ```
 
 by running the above command, you will create a tunnel from your local machine to the Grafana server running on the monitoring server.
 
-To access the Grafana dashboard, visit [http://localhost:3001](http://localhost:3001) and log in with the username `admin` and the password you set in the `docker-compose.yml` file (`strong_admin_password_here`).
+To access the Grafana dashboard, visit [http://localhost:3001](http://localhost:3001) and log in with:
+
+- **Username**: `admin`
+- **Password**: The password you set in `docker-compose.yml` (`strong_admin_password_here`)
 
 ![grafana](grafana.png){: .normal}
+
+**Access Prometheus Interface:**
 
 To access the Prometheus metrics, go back to your terminal, and run the following command to create the tunnel again:
 
 ```bash
-# Prometheus metrics
+# Create SSH tunnel for Prometheus (open new terminal)
 ssh -L 9090:10.0.0.8:9090 hetzner-bastion
 ```
 
-Then visit [http://localhost:9090](http://localhost:9090) to access the Prometheus metrics.
+Visit [http://localhost:9090](http://localhost:9090) to access Prometheus metrics and targets.
 
 
 ![prometheus](prometheus.png){: .normal}
 
 
-> I'll update the documentation to show you how to set a domain for those and open normally without tunneling later.
+#### Verify All Targets Are Up
 
+In Prometheus web interface (`http://localhost:9090`), go to **Status → Targets**. You should see:
+
+- ✅ **prometheus (1/1 up)**
+- ✅ **postgres (1/1 up)**
+- ✅ **app-servers (2/2 up)**
+- ✅ **jobs-server (1/1 up)**
+- ✅ **database-servers (2/2 up)**
+
+
+![prometheus-up](prometheus-up.png){: .normal}
+
+#### Configure Grafana Data Sources
+
+1. **In Grafana, add Prometheus data source:**
+   - At the left menu, go to Connections → Data Sources → Add data source
+   - Select **Prometheus**
+   - URL: `http://prometheus:9090`
+   - No need to change other settings(leave defaults)
+   - Click "Save & Test"
+
+![grafana-add-data-source](grafana-add-data-source.png){: .normal}
+
+2. **Add Loki data source (for logs):**
+   - Add new data source → Loki
+   - URL: `http://loki:3100`
+   - Click "Save & Test"
+
+#### Import Dashboard Templates
+
+Import these community dashboards for instant visibility.
+
+In the left menu, go to **Dashboards**, then in the right side click on **New** -> **Import**.
+
+![grafana-dashboard-import-btn](grafana-dashboard-import-btn.png){: .normal}
+
+Enter the dashboard ID and click **Load**.
+
+![grafana-dashboard-id-load](grafana-dashboard-id-load.png){: .normal}
+
+Then in the next page you must select your Prometheus data source.
+
+![grafana-import-select-data-source](grafana-import-select-data-source.png){: .normal}
+
+and then click on **Import** button.
+
+![grafana-dashboard](grafana-dashboard.png){: .normal}
+
+1. **Node Exporter Dashboard**: ID `1860`
+   - Shows CPU, Memory, Disk, Network for all servers
+
+Again in the left menu, click on **Dashboards**, then in the right side click on **New** -> **Import**.
+
+2. **PostgreSQL Dashboard**: ID `9628`
+   - Database performance, connections, queries
+
+3. **Prometheus Dashboard**: ID `3662`
+   - Monitoring system health
+
+#### What You Can Monitor Now
+
+| Metric Category | What You Can Track | Sample Metrics |
+|----------------|-------------------|----------------|
+| **System Resources** | CPU, Memory, Disk, Network usage | `node_cpu_seconds_total`, `node_memory_MemAvailable_bytes` |
+| **Database Performance** | Connections, queries, replication lag | `pg_stat_database_tup_returned`, `pg_stat_replication_replay_lag` |
+| **Disk Health** | Storage capacity, I/O performance | `node_filesystem_avail_bytes`, `node_disk_io_time_seconds_total` |
+| **Network Traffic** | Bandwidth usage, error rates | `node_network_receive_bytes_total`, `node_network_transmit_errors_total` |
+| **System Load** | Load averages, process counts | `node_load1`, `node_procs_running` |
+
+You now have comprehensive infrastructure monitoring that provides visibility into system health, database performance, and resource utilization across your entire Rails infrastructure.
+
+
+> I’ll update the documentation to show you how to set a domain for those and open normally without tunneling later.
 
 ## Step 14: Rails Application Configuration
 
