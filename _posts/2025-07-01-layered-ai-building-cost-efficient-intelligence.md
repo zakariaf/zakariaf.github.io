@@ -1,7 +1,7 @@
 ---
 title: "Layered AI: Building Cost-Efficient Intelligence"
 author: zakaria
-date: 2025-07-01 17:30:00 +0100
+date: 2025-07-01 16:30:00 +0100
 categories: [AI, Software Architecture]
 tags: [ai, cost-optimization, multi-provider, batch-processing, free-tier, openai, anthropic, gemini]
 media_subpath: /assets/img/posts/2025-07-01-layered-ai-building-cost-efficient-intelligence
