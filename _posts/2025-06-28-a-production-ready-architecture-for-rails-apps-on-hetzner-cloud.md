@@ -1211,8 +1211,9 @@ cd /opt/postgres
 sudo nano /opt/postgres/docker-compose.yml
 ```
 
+Copy and paste the following configuration:
+
 ```yaml
-version: '3.9'
 services:
   postgres:
     image: postgres:16
@@ -1441,8 +1442,9 @@ cd /opt/postgres
 sudo nano /opt/postgres/docker-compose.yml
 ```
 
+Copy and paste the following configuration:
+
 ```yaml
-version: '3.9'
 services:
   postgres:
     image: postgres:16
@@ -1617,12 +1619,161 @@ You now have a production-ready PostgreSQL cluster with:
 - ✅ **Health Monitoring**: Built-in health checks and status monitoring
 - ✅ **Verified Setup**: Confirmed replication is working with test data
 
+## Step 13: Monitoring Server Setup
 
-## Step 13: Rails Application Configuration
+### Why We Need Comprehensive Monitoring
 
-Will be added soon.
+Monitoring provides:
 
-## Step 14: Monitoring Server Setup
+- **System Health**: Track CPU, memory, disk usage across all servers
+- **Application Performance**: Monitor Rails request times, error rates
+- **Database Metrics**: PostgreSQL performance and replication status
+- **Business Metrics**: Track user activity, revenue, custom KPIs
+
+### How to Setup Monitoring
+
+#### Create monitoring Structure
+
+```bash
+ssh monitor-01
+
+# Create monitoring directory
+mkdir -p /opt/monitoring
+cd /opt/monitoring
+```
+
+#### Create Monitoring Docker Compose file
+
+```bash
+sudo nano /opt/monitoring/docker-compose.yml
+```
+
+Copy and paste the following configuration:
+
+```yaml
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=strong_admin_password_here
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://rails_app:very_strong_postgres_password@10.0.0.6:5432/rails_production?sslmode=disable"
+    ports:
+      - "9187:9187"
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+```
+
+> Replace `strong_admin_password_here` with your real password.
+> Replace `very_strong_postgres_password` with your real PostgreSQL password for user `rails_app`.
+> Replace `10.0.0.6` with the actual private IP of your PostgreSQL primary server.
+
+#### Create Prometheus Configuration
+
+```bash
+sudo nano /opt/monitoring/prometheus.yml
+```
+
+Copy and paste the following configuration:
+
+```yaml
+# Prometheus configuration file
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['localhost:9187']
+
+  - job_name: 'rails-apps'
+    static_configs:
+      - targets: ['10.0.0.3:9394', '10.0.0.4:9394']
+    metrics_path: '/metrics'
+
+  - job_name: 'rails-jobs'
+    static_configs:
+      - targets: ['10.0.0.5:9394']
+    metrics_path: '/metrics'
+```
+
+#### Start monitoring stack
+
+```bash
+docker compose up -d
+```
+
+### Access Monitoring Dashboards
+
+You can access the monitoring tools via SSH tunneling through the bastion:
+
+To set up the SSH tunnel, run the following commands in your terminal:
+```bash
+# Grafana dashboard
+ssh -L 3001:10.0.0.8:3001 hetzner-bastion
+```
+
+by running the above command, you will create a tunnel from your local machine to the Grafana server running on the monitoring server.
+
+To access the Grafana dashboard, visit [http://localhost:3001](http://localhost:3001) and log in with the username `admin` and the password you set in the `docker-compose.yml` file (`strong_admin_password_here`).
+
+![grafana](grafana.png){: .normal}
+
+To access the Prometheus metrics, go back to your terminal, and run the following command to create the tunnel again:
+
+```bash
+# Prometheus metrics
+ssh -L 9090:10.0.0.8:9090 hetzner-bastion
+```
+
+Then visit [http://localhost:9090](http://localhost:9090) to access the Prometheus metrics.
+
+
+![prometheus](prometheus.png){: .normal}
+
+
+> I'll update the documentation to show you how to set a domain for those and open normally without tunneling later.
+
+
+## Step 14: Rails Application Configuration
 
 Will be added soon.
 
