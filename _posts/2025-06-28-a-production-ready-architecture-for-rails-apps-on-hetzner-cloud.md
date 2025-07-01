@@ -1,5 +1,5 @@
 ---
-title: "A Production-Ready, Secure, and Scalable Architecture for Ruby on Rails on Hetzner Cloud"
+title: "A Production-Ready, Secure, and Scalable Server Architecture on Hetzner Cloud"
 author: zakaria
 date: 2025-06-28 22:18:00 +0100
 categories: [Infrastructure, Rails]
