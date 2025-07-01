@@ -4,6 +4,8 @@ author: zakaria
 date: 2025-06-22 12:18:00 +0100
 categories: [Product Development, AI]
 tags: [AI, Product Development, Solo Founder, Tech Startup, Machine Learning, Software Development]
+media_subpath: /assets/img/posts/2025-06-22-what-i-learned-building-a-product-with-ai
+image: cover.png
 ---
 
 I decided to build my own product. What happened next surprised me.
