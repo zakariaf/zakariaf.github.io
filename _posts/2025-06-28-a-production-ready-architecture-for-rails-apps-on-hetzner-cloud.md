@@ -118,8 +118,8 @@ This infrastructure creates a **security-first, highly available Rails applicati
 
 #### 💰 **Cost Efficiency**
 
-- **Total Monthly Cost**: ~€180 for complete production setup with monitoring
-- **Staging Environment**: Single €6.80 server for development/testing
+- **Total Monthly Cost**: ~80 for complete production setup with monitoring
+- **Staging Environment**: Single €11.99 server for development/testing
 - **No External Services**: Solid Queue eliminates Redis costs and complexity
 - **Hetzner Pricing**: 50-70% cheaper than AWS/GCP for equivalent resources
 
@@ -1602,14 +1602,13 @@ DATABASE_URL=postgresql://rails_app:very_secure_rails_password@10.0.0.6:5432/rai
 REPLICA_DATABASE_URL=postgresql://rails_app:very_secure_rails_password@10.0.0.7:5432/rails_production
 ```
 
-
 You now have a production-ready PostgreSQL cluster with:
 
-✅ **Primary-Replica Replication**: Automatic failover capability and read scaling
-✅ **Proper Security**: User isolation and network-based authentication
-✅ **Performance Tuning**: Optimized configuration for Rails workloads
-✅ **Health Monitoring**: Built-in health checks and status monitoring
-✅ **Verified Setup**: Confirmed replication is working with test data
+- ✅ **Primary-Replica Replication**: Automatic failover capability and read scaling
+- ✅ **Proper Security**: User isolation and network-based authentication
+- ✅ **Performance Tuning**: Optimized configuration for Rails workloads
+- ✅ **Health Monitoring**: Built-in health checks and status monitoring
+- ✅ **Verified Setup**: Confirmed replication is working with test data
 
 
 ## Step 13: Rails Application Configuration
@@ -1651,7 +1650,7 @@ You now have a production-ready Rails infrastructure that provides:
 - Comprehensive monitoring
 
 **💰 Cost Efficiency:**
-- ~€180/month total cost
+- ~80/month total cost
 - 50-70% cheaper than AWS/GCP
 - No vendor lock-in
 - Simple operational model
