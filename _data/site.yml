@@ -1,0 +1,150 @@
+# Everything the home page lists. Stars are a fallback: the page refreshes them from GitHub on load.
+
+now:
+  company: Stewark
+  url: https://stewark.com
+  role: Founding Engineer · AI Engineer
+  line: Governance, built around you. Software that helps investors vote on their own terms, with every recommendation traced to its source.
+
+startups:
+  - name: AppLander
+    url: https://applander.io
+    tagline: Your app's web home, ready in minutes.
+    text: The pages Apple and Google require before they publish an app (landing page, privacy policy, terms, support and account deletion) from one dashboard.
+    status: Public beta
+  - name: MCPlane
+    url: https://mcplane.com
+    tagline: The Docker Hub of MCP.
+    text: A marketplace to find, connect and deploy Model Context Protocol servers, with more than 16,000 listed across 15 categories.
+    status: Live
+
+closed:
+  - name: Calugo
+    when: 2024 – 2026
+    text: Learn English by reading real books. Tap a word for its Oxford definition, then practise it with flashcards.
+  - name: BookLovers
+    when: "2024"
+    text: Summaries of 15,000 books, with discussion forums around them.
+  - name: 1xcoder
+    when: "2020"
+    text: Professional bootcamps for developers, with guaranteed employment.
+
+open_source:
+  - name: ReactNative-Skills
+    repo: zakariaf/ReactNative-Skills
+    url: https://zakaria.dev/ReactNative-Skills/
+    stars: 0
+    lang: JavaScript
+    text: 79 self-verifying React Native and Expo skills for AI coding agents. Every skill ends in a checker that prints PASS or FAIL.
+  - name: Flutter-Skills
+    repo: zakariaf/Flutter-Skills
+    url: https://zakaria.dev/Flutter-Skills/
+    stars: 58
+    lang: Dart
+    text: Reusable Flutter engineering skills for AI coding agents, from architecture and Riverpod to testing, i18n and RTL.
+  - name: rails-base-app
+    repo: zakariaf/rails-base-app
+    url: https://github.com/zakariaf/rails-base-app
+    stars: 233
+    lang: Ruby
+    text: A Rails and Vue 3 starter with Vite and Docker configs for production images.
+  - name: svg-toolbelt
+    repo: zakariaf/svg-toolbelt
+    url: https://zakaria.dev/svg-toolbelt/
+    stars: 18
+    lang: TypeScript
+    text: Zero-dependency zoom, pan, touch and keyboard controls for any SVG.
+  - name: RAG-Cache
+    repo: zakariaf/RAG-Cache
+    url: https://github.com/zakariaf/RAG-Cache
+    stars: 13
+    lang: Python
+    text: A semantic cache for LLM queries on Redis and Qdrant, built to cut API cost and latency.
+  - name: SecScanMCP
+    repo: zakariaf/SecScanMCP
+    url: https://github.com/zakariaf/SecScanMCP
+    stars: 5
+    lang: Python
+    text: A security scanner for MCP servers that looks for prompt injection, tool poisoning and more.
+  - name: hyperbuild
+    repo: zakariaf/hyperbuild
+    url: https://github.com/zakariaf/hyperbuild
+    stars: 0
+    lang: Shell
+    text: One prompt in, a researched, designed and implemented app out. A multi-agent pipeline for Claude Code.
+  - name: Subly
+    repo: zakariaf/Subly
+    url: https://github.com/zakariaf/Subly
+    stars: 0
+    lang: Python
+    text: A Telegram bot and CLI that transcribes audio or video and returns translated subtitles, right-to-left aware.
+
+oss_apps:
+  - name: MindForge
+    url: https://github.com/zakariaf/mindforge
+    text: Brain training with no wifi needed, on the App Store. Also an engine that ships many small games from one codebase.
+  - name: NearlyStop
+    url: https://github.com/zakariaf/NearlyStop
+    text: Lays out the steroid taper you and your doctor agreed, and what to take each morning.
+  - name: Odova
+    url: https://github.com/zakariaf/Odova
+    text: Car maintenance, fuel and running costs, with reminders by distance and date.
+  - name: Reed
+    url: https://reed.applander.io
+    text: An offline text-to-speech board for part-time AAC. Adult-first and private by design.
+  - name: SplitFair
+    url: https://github.com/zakariaf/SplitFair
+    text: A native iOS bill splitter that splits by who ordered what. Built live on YouTube.
+
+youtube:
+  channel: https://www.youtube.com/@zakariafatahi
+  series: 50 Apps Challenge
+  videos:
+    - id: whY279hTRTA
+      title: Claude Code Fixed a 4.3(a) App Store Rejection
+    - id: CahBx2Y1Mdo
+      title: I Wrote 0 Lines of Code. Claude Code Built This Whole iOS App
+    - id: BhEsit8nMpI
+      title: "50 Apps Challenge: NearlyStop"
+    - id: Fqg9nMul1Ao
+      title: "50 Apps Challenge: Offline Brain Games"
+    - id: dJZQYVSaL3U
+      title: Let Claude Code Publish Your App to the App Store
+    - id: xeNOyukCd-s
+      title: The Claude Code Skills I Reuse in Every Flutter App
+
+timeline:
+  - when: Now
+    role: Founding Engineer · AI Engineer
+    org: Stewark
+    place: Berlin
+  - when: "2024"
+    role: Lead Software Engineer
+    org: Taxmaro
+    place: Berlin
+    note: HR and payroll
+  - when: 2017 – 2024
+    role: Lead Software Engineer
+    org: Buzzjective
+    place: Berlin
+    note: Rails developer, then senior, then lead, building products for fast-growing companies
+  - when: 2017 – 2020
+    role: Co-founder · Rails developer
+    org: ACOM Group
+    place: Sanandaj
+  - when: 2015 – 2017
+    role: Java developer
+    org: Shenakht
+    place: Kermanshah
+  - when: 2010 – 2015
+    role: Freelancer, then computer teacher
+    org: Kermanshah and Paveh
+
+stack: [Ruby on Rails, Hotwire, Flutter, React Native, Expo, SwiftUI, TypeScript, Python, PostgreSQL, Claude Code, Agent Skills, MCP, Kamal, Docker]
+
+links:
+  github: https://github.com/zakariaf
+  linkedin: https://www.linkedin.com/in/zakaria-fatahi
+  x: https://x.com/zakariaf_dev
+  youtube: https://www.youtube.com/@zakariafatahi
+  persian_blog: https://zakariafatahi.ir/

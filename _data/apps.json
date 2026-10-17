@@ -1,0 +1,124 @@
+[
+ {
+  "id": 6760635914,
+  "name": "اذکار",
+  "genre": "Reference",
+  "released": "2026-04-06",
+  "lang": "fa",
+  "url": "https://apps.apple.com/app/id6760635914",
+  "tagline": "Daily prayers and dhikr in Persian, Arabic and Kurdish",
+  "en": "Azkar"
+ },
+ {
+  "id": 6761840717,
+  "name": "کتابخانه مسلم",
+  "genre": "Reference",
+  "released": "2026-04-09",
+  "lang": "fa",
+  "url": "https://apps.apple.com/app/id6761840717",
+  "tagline": "Free Islamic books to read in Persian",
+  "en": "Muslim Library"
+ },
+ {
+  "id": 6775301956,
+  "name": "خودرو یار",
+  "genre": "Utilities",
+  "released": "2026-06-03",
+  "lang": "fa",
+  "url": "https://apps.apple.com/app/id6775301956",
+  "tagline": "Your car maintenance assistant",
+  "en": "Khodro Yar"
+ },
+ {
+  "id": 6775969993,
+  "name": "نماز یار",
+  "genre": "Lifestyle",
+  "released": "2026-06-08",
+  "lang": "fa",
+  "url": "https://apps.apple.com/app/id6775969993",
+  "tagline": "Calm, fully offline prayer times",
+  "en": "Namaz Yar"
+ },
+ {
+  "id": 6794768074,
+  "name": "Number Forge: Daily Math",
+  "genre": "Games",
+  "released": "2026-08-28",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6794768074",
+  "tagline": "Six numbers. One target. Forge it."
+ },
+ {
+  "id": 6805451427,
+  "name": "Gridlock: Daily Car Puzzle",
+  "genre": "Games",
+  "released": "2026-09-09",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6805451427",
+  "tagline": "Slide the cars. Free the red one. Every par is proven, not estimated."
+ },
+ {
+  "id": 6805455541,
+  "name": "Shikaku: Paper & Ink Logic",
+  "genre": "Games",
+  "released": "2026-09-09",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6805455541",
+  "tagline": "Draw a rectangle around each number so its area matches. There is exactly one way."
+ },
+ {
+  "id": 6805455809,
+  "name": "Zebra: Logic Grid Puzzles",
+  "genre": "Games",
+  "released": "2026-09-16",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6805455809",
+  "tagline": "Read a clue. Cross off what it rules out. Watch the consequences ripple until one arrangement survives."
+ },
+ {
+  "id": 6803829952,
+  "name": "MindForge: Brain Training",
+  "genre": "Games",
+  "released": "2026-09-16",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6803829952",
+  "tagline": "MindForge is a small collection of brain-training games that runs entirely on your phone. Two of the four are the app's own — built on thing",
+  "source": "https://github.com/zakariaf/mindforge"
+ },
+ {
+  "id": 6801566256,
+  "name": "Nodelock: Logic Pipes",
+  "genre": "Games",
+  "released": "2026-09-16",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6801566256",
+  "tagline": "One solution. Always. Never a guess."
+ },
+ {
+  "id": 6805455597,
+  "name": "Takuzu: Binary Logic Puzzle",
+  "genre": "Games",
+  "released": "2026-09-16",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6805455597",
+  "tagline": "Binary logic, graded by the technique each board actually needs."
+ },
+ {
+  "id": 6805454193,
+  "name": "Nonogram Darkroom",
+  "genre": "Games",
+  "released": "2026-09-16",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6805454193",
+  "tagline": "Read the numbers. Fill the grid. A picture comes out of it."
+ },
+ {
+  "id": 6805454389,
+  "name": "Pullback",
+  "genre": "Games",
+  "released": "2026-09-16",
+  "lang": "en",
+  "url": "https://apps.apple.com/app/id6805454389",
+  "tagline": "Push every crate home. Par is the fewest pushes possible — and we can prove it."
+ }
+]
