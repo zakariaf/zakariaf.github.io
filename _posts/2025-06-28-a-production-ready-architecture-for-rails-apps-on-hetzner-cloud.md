@@ -204,7 +204,7 @@ Think of this as creating the "internal wiring" of our data center before pluggi
 
 This creates the virtual network fabric that all our private servers will use to communicate securely.
 
-![production-network](production-network.png){: .normal}
+![production-network](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/production-network.png){: .normal}
 
 ### Network IP Planning
 
@@ -256,7 +256,7 @@ The bastion is like having a **single, heavily guarded gate** to your digital fo
 - You don't need to select Firewall, backups, volumes, and all other things in this step.
 
 
-![bastion-server](bastion-server.png){: .normal}
+![bastion-server](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/bastion-server.png){: .normal}
 
 #### Initial Server Hardening
 
@@ -435,7 +435,7 @@ Tell Hetzner Cloud to route internet traffic through our bastion:
 
 This ensures all internet-bound traffic from private servers is routed through the bastion, which handles NAT translation.
 
-![hetzner-routing](hetzner-routing.png){: .normal}
+![hetzner-routing](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/hetzner-routing.png){: .normal}
 
 For the NAT routing to work as intended, we must manually configure the default gateway inside each private VM (server) to point to the bastion’s IP, and the warning you see is about that, but we will do the configuration while creating the application servers in the next step.
 
@@ -480,7 +480,7 @@ In the left menu, select "Servers" and then click "Add Server".
 
 These servers will run our Rails application
 
-![server-app](server-app.png){: .normal}
+![server-app](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/server-app.png){: .normal}
 
 ## Step 4: Jobs Server
 
@@ -522,7 +522,7 @@ This server will run Rails with Solid Queue for background job processing.
 
 This is what we have so far:
 
-![servers](servers.png){: .normal}
+![servers](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/servers.png){: .normal}
 
 ## Step 5: Provision PostgreSQL Database Servers
 
@@ -580,7 +580,7 @@ In the left menu, select "Volumes" and then click "Create Volume".
 
 > **UPDATED**: It's not a bug, Hetzner only makes a certain amount of resources available to each customer. And if I want more resources I have to send them a limit request. which I'll do later, but for now, I will continue with the tutorial without volumes, and I will update this section when I get the volumes.
 
-![hetzner-volume-error](hetzner-volume-error.png){: .normal}
+![hetzner-volume-error](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/hetzner-volume-error.png){: .normal}
 
 ## Step 6: Monitoring Server
 
@@ -622,7 +622,7 @@ After creating each private server, we need to configure them to access the inte
 But before that we need to be able to connect to our servers, and it's not possible to do it simply by using
 `ssh root@YOUR_SERVER_PUBLIC_IP` because our servers have no public IP. look at them:
 
-![servers-final-list](servers-final-list.png){: .normal}
+![servers-final-list](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/servers-final-list.png){: .normal}
 
 only bastion server has a public IP, so we must connect to the others through the bastion server. To do this we need some configs in our ssh local machine.
 
@@ -793,8 +793,8 @@ In the left menu, select "Load Balancers" and then click "Create Load Balancer".
         - app-02
     - **Services**: Delete the existing service, we will create it later.
 
-![lb-targets](lb-targets.png){: .normal}
-![lb-services](lb-services.png){: .normal}
+![lb-targets](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/lb-targets.png){: .normal}
+![lb-services](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/lb-services.png){: .normal}
 
 ## Step 9: CloudFlare Integration
 
@@ -819,9 +819,9 @@ This is your first line of defense and performance optimization.
    - Keep default settings and generate
    - Now you can see certificate and private key. which we will use in the next step.
 
-![cloudflare-origin](cloudflare-origin.png){: .normal}
-![cloudflare-create](cloudflare-create.png){: .normal}
-![cloudflare-keys](cloudflare-keys.png){: .normal}
+![cloudflare-origin](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/cloudflare-origin.png){: .normal}
+![cloudflare-create](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/cloudflare-create.png){: .normal}
+![cloudflare-keys](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/cloudflare-keys.png){: .normal}
 
 ### Upload Certificate to Load Balancer
 
@@ -840,7 +840,7 @@ This is your first line of defense and performance optimization.
         - **Private Key**: Paste the Private Key content from CloudFlare
       - And click on Save Certificate button
 
-![lb-certificates](lb-certificates.png){: .normal}
+![lb-certificates](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/lb-certificates.png){: .normal}
 
     - Click on Edit button (pen icon) right side of the existing service
       - Keep everything as it is just change the path to `/up` (our rails health check url)
@@ -856,7 +856,7 @@ This is your first line of defense and performance optimization.
         - Reponse: leave it empty
         - TLS: Disabled
 
-![lb-health-check](lb-health-check.png){: .normal}
+![lb-health-check](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/lb-health-check.png){: .normal}
 
 ### Configure DNS and SSL
 
@@ -877,8 +877,8 @@ Go back to Cloudflare dashboard and configure the following for your domain:
 - Replace `LOAD_BALANCER_PUBLIC_IP` with the public IP of your **Hetzner Load Balancer**.
 - and click on **Save**
 
-![dns-add-record](dns-add-record.png){: .normal}
-![dns-lb-ip](dns-lb-ip.png){: .normal}
+![dns-add-record](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/dns-add-record.png){: .normal}
+![dns-lb-ip](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/dns-lb-ip.png){: .normal}
 
 2. **SSL/TLS Settings**:
 
@@ -886,7 +886,7 @@ Go back to Cloudflare dashboard and configure the following for your domain:
   - Enable "Always Use HTTPS"
   - You can enable "HTTP Strict Transport Security (HSTS)" as well.
 
-![use-https](use-https.png){: .normal}
+![use-https](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/use-https.png){: .normal}
 
 ## Step 10: Firewall Configuration
 
@@ -914,8 +914,8 @@ In the left menu, select "Firewalls" and then click "Create Firewall".
    - Allow ICMP for diagnostics
 3. Apply to: bastion-server only
 
-![firewalls-bastion-rules](firewalls-bastion-rules.png){: .normal}
-![firewalls-bastion-servers](firewalls-bastion-servers.png){: .normal}
+![firewalls-bastion-rules](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/firewalls-bastion-rules.png){: .normal}
+![firewalls-bastion-servers](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/firewalls-bastion-servers.png){: .normal}
 
 
 ### Host-Based Firewalls (Internal Segmentation)
@@ -1921,7 +1921,7 @@ To access the Grafana dashboard, visit [http://localhost:3001](http://localhost:
 - **Username**: `admin`
 - **Password**: The password you set in `docker-compose.yml` (`strong_admin_password_here`)
 
-![grafana](grafana.png){: .normal}
+![grafana](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/grafana.png){: .normal}
 
 **Access Prometheus Interface:**
 
@@ -1935,7 +1935,7 @@ ssh -L 9090:10.0.0.8:9090 hetzner-bastion
 Visit [http://localhost:9090](http://localhost:9090) to access Prometheus metrics and targets.
 
 
-![prometheus](prometheus.png){: .normal}
+![prometheus](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/prometheus.png){: .normal}
 
 
 #### Verify All Targets Are Up
@@ -1949,7 +1949,7 @@ In Prometheus web interface (`http://localhost:9090`), go to **Status → Target
 - ✅ **database-servers (2/2 up)**
 
 
-![prometheus-up](prometheus-up.png){: .normal}
+![prometheus-up](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/prometheus-up.png){: .normal}
 
 #### Configure Grafana Data Sources
 
@@ -1960,7 +1960,7 @@ In Prometheus web interface (`http://localhost:9090`), go to **Status → Target
    - No need to change other settings(leave defaults)
    - Click "Save & Test"
 
-![grafana-add-data-source](grafana-add-data-source.png){: .normal}
+![grafana-add-data-source](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/grafana-add-data-source.png){: .normal}
 
 2. **Add Loki data source (for logs):**
    - Add new data source → Loki
@@ -1973,19 +1973,19 @@ Import these community dashboards for instant visibility.
 
 In the left menu, go to **Dashboards**, then in the right side click on **New** -> **Import**.
 
-![grafana-dashboard-import-btn](grafana-dashboard-import-btn.png){: .normal}
+![grafana-dashboard-import-btn](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/grafana-dashboard-import-btn.png){: .normal}
 
 Enter the dashboard ID and click **Load**.
 
-![grafana-dashboard-id-load](grafana-dashboard-id-load.png){: .normal}
+![grafana-dashboard-id-load](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/grafana-dashboard-id-load.png){: .normal}
 
 Then in the next page you must select your Prometheus data source.
 
-![grafana-import-select-data-source](grafana-import-select-data-source.png){: .normal}
+![grafana-import-select-data-source](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/grafana-import-select-data-source.png){: .normal}
 
 and then click on **Import** button.
 
-![grafana-dashboard](grafana-dashboard.png){: .normal}
+![grafana-dashboard](/assets/img/posts/2025-06-28-a-production-ready-architecture-for-rails-apps-on-hetzner-cloud/grafana-dashboard.png){: .normal}
 
 1. **Node Exporter Dashboard**: ID `1860`
    - Shows CPU, Memory, Disk, Network for all servers

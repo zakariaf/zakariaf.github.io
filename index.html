@@ -1,4 +1,218 @@
 ---
-layout: home
-# Index page
+layout: default
+curtain: true
+body_class: home
 ---
+{% assign d = site.data.site %}
+{% assign games = site.data.apps | where: "lang", "en" %}
+{% assign persian = site.data.apps | where: "lang", "fa" %}
+
+<section class="hero" id="top">
+  <div class="hero-glow" id="glow" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="label rv" style="--d:1.1s">Berlin &nbsp;·&nbsp; {{ d.now.role }} at <a href="{{ d.now.url }}" style="color:inherit" rel="noopener">{{ d.now.company }}</a></div>
+      <h1><span class="split" data-delay="1.15">I build</span><br><span class="roll" id="roll" aria-live="off"><span class="on">apps.</span><span>startups.</span><span>agent skills.</span><span>open source.</span><span>videos.</span></span></h1>
+      <p class="lede rv" style="--d:1.6s">I'm Zakaria, <b>Founding Engineer and AI Engineer at Stewark</b>. Before that I spent seven years building and leading Rails teams. On my own time: <b>13 apps on the App Store</b>, two startups, open-source agent skills, and a YouTube series where Claude Code builds fifty apps.</p>
+      <div class="ctas rv" style="--d:1.75s">
+        <a class="btn solid" href="#work">See the work <span class="arr">→</span></a>
+        <a class="btn" href="{{ d.links.youtube }}" rel="noopener">Watch on YouTube</a>
+      </div>
+    </div>
+    <div class="rv" style="--d:1.25s">
+      <div class="orbit" id="orbit" aria-hidden="true">
+        <div class="ring" style="width:66%;height:66%"></div>
+        <div class="ring" style="width:98%;height:98%"></div>
+        <div class="me"><img src="/assets/img/me.jpg" alt=""></div>
+        {% for a in site.data.apps %}<div class="app" data-ring="{% if forloop.index0 < 6 %}0{% else %}1{% endif %}"><img src="/assets/img/apps/{{ a.id }}.png" alt="" loading="eager"></div>{% endfor %}
+        <div class="tag" style="left:2%;top:12%"><b>13</b> apps on the App Store</div>
+        <div class="tag" style="right:0;top:46%;animation-delay:-2s"><b>2</b> startups</div>
+        <div class="tag" style="left:8%;bottom:8%;animation-delay:-4s"><b>50</b> Apps Challenge</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true"><i></i>Scroll</div>
+</section>
+
+<section id="work" style="padding-top:40px">
+  <div class="wrap">
+    <div class="nums">
+      <div class="num rv"><div class="n" data-count="13">13</div><div class="l">apps on the App Store</div></div>
+      <div class="num rv" style="--d:.08s"><div class="n" data-count="2">2</div><div class="l">startups, both live</div></div>
+      <div class="num rv" style="--d:.16s"><div class="n" id="star-total" data-count="300" data-suffix="+">300+</div><div class="l">stars on GitHub</div></div>
+      <div class="num rv" style="--d:.24s"><div class="n" data-count="79">79</div><div class="l">self-verifying agent skills</div></div>
+    </div>
+
+    <div class="now" style="margin-top:110px">
+      <div>
+        <div class="label rv">Now</div>
+        <h2 class="split">Founding engineer at <em>{{ d.now.company }}.</em></h2>
+      </div>
+      <div class="rv">
+        <p>{{ d.now.line }}</p>
+        <a class="more" href="{{ d.now.url }}" rel="noopener">stewark.com <span>↗</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="band" aria-hidden="true">
+  <div class="band-row" data-speed="-0.35">{% for s in d.stack %}<span>{{ s }}</span>{% endfor %}{% for s in d.stack %}<span>{{ s }}</span>{% endfor %}</div>
+  <div class="band-row" data-speed="0.35" style="margin-top:6px">{% assign rev = d.stack | reverse %}{% for s in rev %}<span>{{ s }}</span>{% endfor %}{% for s in rev %}<span>{{ s }}</span>{% endfor %}</div>
+</div>
+
+<section id="startups">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label rv">Startups</div><h2 class="split">Things I <em>founded.</em></h2></div>
+      <p class="sec-sub rv">Products I started and run alongside my day job. Both are live.</p>
+    </div>
+    <div class="startups">
+      {% for s in d.startups %}
+      <a class="startup tilt rv" style="--d:{{ forloop.index0 | times: 0.12 }}s" href="{{ s.url }}" rel="noopener">
+        <div class="top"><span class="status">{{ s.status }}</span><span class="label">{{ s.url | remove: 'https://' }}</span></div>
+        <h3>{{ s.name }}</h3>
+        <p class="tagline">{{ s.tagline }}</p>
+        <p>{{ s.text }}</p>
+        <span class="go">Visit {{ s.name }} <span>→</span></span>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="closed">
+      <div class="label rv">Didn't make it</div>
+      {% for c in d.closed %}
+      <div class="closed-row rv" style="--d:{{ forloop.index0 | times: 0.08 }}s">
+        <span class="when">{{ c.when }}</span>
+        <h4><span>{{ c.name }}</span></h4>
+        <p>{{ c.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="shelf" id="apps" style="padding:0">
+  <div class="shelf-pin">
+    <div class="shelf-track" id="shelf">
+      <div class="shelf-intro">
+        <div class="label">On the App Store</div>
+        <h2 style="font-size:clamp(40px,4.6vw,64px)">Thirteen <em>apps</em>, shipped.</h2>
+        <p class="sec-sub">Logic games with provable puzzles, and four apps for Persian speakers. Offline, no account, no tracking.</p>
+      </div>
+      {% for a in games %}
+      <div class="appcard tilt">
+        <img src="/assets/img/apps/{{ a.id }}.png" alt="" loading="lazy">
+        <span class="g">{{ a.genre }}{% if a.source %} · Open source{% endif %}</span>
+        <h4><a href="{{ a.url }}" rel="noopener">{{ a.name }}</a></h4>
+        <p>{{ a.tagline }}</p>
+        <span class="links"><a class="store" href="{{ a.url }}" rel="noopener">App Store ↗</a>{% if a.source %}<a class="store" href="{{ a.source }}" rel="noopener">Source ↗</a>{% endif %}</span>
+      </div>
+      {% endfor %}
+      {% for a in persian %}
+      <div class="appcard tilt">
+        <img src="/assets/img/apps/{{ a.id }}.png" alt="" loading="lazy">
+        <span class="g">In Persian · {{ a.genre }}</span>
+        <h4><a href="{{ a.url }}" rel="noopener"><span class="fa" lang="fa">{{ a.name }}</span>{{ a.en }}</a></h4>
+        <p>{{ a.tagline }}</p>
+        <span class="links"><a class="store" href="{{ a.url }}" rel="noopener">App Store ↗</a>{% if a.source %}<a class="store" href="{{ a.source }}" rel="noopener">Source ↗</a>{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="shelf-progress" aria-hidden="true"><i id="shelf-bar"></i></div>
+  </div>
+</section>
+
+<section id="oss-apps">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label rv">Open-source apps</div><h2 class="split">Offline first, <em>source open.</em></h2></div>
+      <p class="sec-sub rv">Small apps for real, specific people. No account, no server, and the code is on GitHub.</p>
+    </div>
+    <div class="minis">
+      {% for a in d.oss_apps %}
+      <a class="mini rv" style="--d:{{ forloop.index0 | times: 0.06 }}s" href="{{ a.url }}" rel="noopener">
+        <span class="chip">Open source</span>
+        <h4>{{ a.name }}</h4>
+        <p>{{ a.text }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="open-source">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label rv">Open source</div><h2 class="split">Tools I <em>give away.</em></h2></div>
+      <a class="more rv" href="{{ d.links.github }}" rel="noopener">All on GitHub <span>↗</span></a>
+    </div>
+    <div class="rows">
+      {% assign colors = "Ruby:#CC342D,Dart:#00B4AB,TypeScript:#3178C6,JavaScript:#E0B000,Python:#3572A5,Shell:#89E051" | split: "," %}
+      {% for p in d.open_source %}
+      {% assign dot = "#888" %}{% for c in colors %}{% assign kv = c | split: ":" %}{% if kv[0] == p.lang %}{% assign dot = kv[1] %}{% endif %}{% endfor %}
+      <a class="row rv" href="{{ p.url }}" rel="noopener" data-repo="{{ p.repo }}">
+        <h4>{{ p.name }}</h4>
+        <p><span class="dot" style="background:{{ dot }}"></span>{{ p.text }}</p>
+        <span class="stars"><span class="sc">{{ p.stars }}</span><small>★</small></span>
+        <span class="arr">↗</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="videos" style="background:var(--bg-soft);border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label rv">YouTube · {{ d.youtube.series }}</div><h2 class="split">Fifty apps, <em>built on camera.</em></h2></div>
+      <a class="more rv" href="{{ d.youtube.channel }}" rel="noopener">Subscribe <span>↗</span></a>
+    </div>
+    <div class="videos">
+      {% for v in d.youtube.videos %}
+      <a class="video rv" style="--d:{{ forloop.index0 | modulo: 3 | times: 0.1 }}s" href="https://www.youtube.com/watch?v={{ v.id }}" rel="noopener">
+        <div class="thumb"><img src="/assets/img/videos/{{ v.id }}.jpg" alt="" loading="lazy"><span class="play"></span></div>
+        <h4>{{ v.title }}</h4>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="writing">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label rv">Writing</div><h2 class="split">Notes from <em>the work.</em></h2></div>
+      <a class="more rv" href="{{ d.links.persian_blog }}" rel="noopener" lang="fa">وبلاگ فارسی <span>↗</span></a>
+    </div>
+    <div class="posts">
+      {% for p in site.posts %}
+      <a class="post-row rv" href="{{ p.url }}" {% if p.image %}data-peek="{{ p.media_subpath }}/{{ p.image }}"{% endif %}>
+        <time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%b %Y" }}</time>
+        <h4>{{ p.title }}</h4>
+        <span class="cat">{{ p.categories | first }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<div class="peek" id="peek" aria-hidden="true"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt=""></div>
+
+<section id="about">
+  <div class="wrap about">
+    <div>
+      <div class="label rv">About</div>
+      <p class="bio rv" style="margin-top:18px">I started as a freelancer and a computer teacher in Kermanshah, moved to Berlin, and spent seven years growing from Rails developer to lead at Buzzjective. Today I'm a founding engineer at Stewark, and in my own time I make <em>small, careful apps</em> and the agent skills that help build them.</p>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="line"><i id="tl-line"></i></div>
+      {% for t in d.timeline %}
+      <div class="tl rv">
+        <div class="when">{{ t.when }}</div>
+        <h4>{{ t.role }}</h4>
+        <div class="org">{{ t.org }}{% if t.place %} · {{ t.place }}{% endif %}</div>
+        {% if t.note %}<p>{{ t.note }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
