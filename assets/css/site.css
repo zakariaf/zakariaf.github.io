@@ -124,6 +124,11 @@ header.nav.hide{transform:translateY(-100%)}
 .orbit .tag b{color:var(--accent)}
 @keyframes bob{50%{transform:translateY(-8px)}}
 
+/* the quiet mark at the centre of the orbit */
+.orbit .me.mark{display:grid;place-items:center;background:var(--panel)}
+.orbit .me.mark span{font-family:var(--serif);font-size:clamp(34px,5vw,64px);letter-spacing:-.04em;color:var(--text)}
+.orbit .me.mark b{color:var(--accent);font-weight:400}
+
 /* numbers */
 .nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .num{padding:30px 22px 28px;border-left:1px solid var(--border-soft)}
